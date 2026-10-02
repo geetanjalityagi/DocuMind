@@ -1,13 +1,16 @@
-from sentence_transformers import SentenceTransformer
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
+from app.config import CHROMA_DIR
 
-def embed_text(chunks):
-    model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
-    embeddings = HuggingFaceEmbeddings(model_name=model)
+def embed_text(chunks, document_id):
+    embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 
-    vectors = Chroma.from_documents(documents=chunks, embedding=embeddings)
-    retriever = vectors.as_retriever()
+    vector_store = Chroma(
+        collection_name=f"document_{document_id}",
+        embedding_function=embeddings,
+        persist_directory=str(CHROMA_DIR)
+    )
 
-    return retriever
+    vector_store.add_documents(chunks)
 
+    return vector_store

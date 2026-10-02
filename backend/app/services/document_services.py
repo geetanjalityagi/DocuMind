@@ -6,6 +6,9 @@ from pypdf import PdfReader
 from app.config import UPLOAD_DIR
 
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_core.documents import Document
+
+from app.services.embedding_services import embed_text
 
 
 async def save_document(file: UploadFile):
@@ -42,17 +45,28 @@ async def save_document(file: UploadFile):
         raise ValueError("Invalid or corrupted PDF")
 
 
-    documents = ""
+    documents = []
     
-    for page in reader.pages:
+    for page_no, page in enumerate(reader.pages, start=1):
         page_content = page.extract_text()
 
         if page_content:
-            documents += page_content + "\n"
+            documents.append(
+                Document(
+                    page_content = page_content,
+                    metadata={
+                        "document_id" : document_id,
+                        "file_name" : file.filename,
+                        "page_no" : page_no
+                    }
+                )
+            ) 
+
 
     text_splitter = RecursiveCharacterTextSplitter(chunk_size = 1000, chunk_overlap = 250)
-    chunks = text_splitter.split_text(documents)
+    chunks = text_splitter.split_documents(documents)
 
+    vector_store = embed_text(chunks, document_id)
 
     return {
         "document_id": document_id,
