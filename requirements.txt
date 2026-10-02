@@ -11,6 +11,5 @@ chromadb
 sentence-transformers
 python-multipart
 huggingface_hub
-sentence-transformers
 langchain-huggingface
 langchain_chroma
