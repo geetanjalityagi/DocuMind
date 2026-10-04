@@ -13,3 +13,4 @@ python-multipart
 huggingface_hub
 langchain-huggingface
 langchain_chroma
+groq
