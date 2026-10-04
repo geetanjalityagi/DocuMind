@@ -13,4 +13,6 @@ python-multipart
 huggingface_hub
 langchain-huggingface
 langchain_chroma
+langchain_groq
+langchain-classic
 groq
