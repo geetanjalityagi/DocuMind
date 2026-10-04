@@ -64,7 +64,7 @@ async def save_document(file: UploadFile):
 
     chunks = create_chunks(documents)
 
-    vector_store = embed_text(chunks, document_id)
+    embed_text(chunks, document_id)
 
     return {
         "document_id": document_id,

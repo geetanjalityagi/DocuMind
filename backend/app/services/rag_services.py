@@ -9,4 +9,16 @@ from langchain_core.runnables import RunnableWithMessageHistory
 from langchain_classic.chains import create_history_aware_retriever, create_retrieval_chain
 from langchain_classic.chains.combine_documents import create_stuff_documents_chain
 
+
 groq_api_key = os.getenv("GROP_API_KEY")
+
+def rag_pipeline(seesion_id, file):
+    
+    llm = ChatGroq(api_key=groq_api_key, model="openai/gpt-oss-120b")
+
+
+
+
+
+
+    
