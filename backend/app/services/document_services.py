@@ -5,10 +5,10 @@ from pypdf import PdfReader
 
 from app.config import UPLOAD_DIR
 
-from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
 
 from app.services.embedding_services import embed_text
+from app.services.chunk_service import create_chunks
 
 
 async def save_document(file: UploadFile):
@@ -62,9 +62,7 @@ async def save_document(file: UploadFile):
                 )
             ) 
 
-
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size = 1000, chunk_overlap = 250)
-    chunks = text_splitter.split_documents(documents)
+    chunks = create_chunks(documents)
 
     vector_store = embed_text(chunks, document_id)
 
