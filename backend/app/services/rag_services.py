@@ -1,4 +1,4 @@
-import os
+from app.config import settings
 
 from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate , MessagesPlaceholder
@@ -9,14 +9,18 @@ from langchain_core.runnables import RunnableWithMessageHistory
 from langchain_classic.chains import create_history_aware_retriever, create_retrieval_chain
 from langchain_classic.chains.combine_documents import create_stuff_documents_chain
 
-from services.embedding_services import get_vector_store
+from app.services.embedding_services import get_vector_store
 
+chat_store = {}
 
-groq_api_key = os.getenv("GROP_API_KEY")
+def get_session_history(session_id:str) -> BaseChatMessageHistory:
+    if session_id not in chat_store:
+        chat_store[session_id] = ChatMessageHistory()
+    return chat_store[session_id]
 
-def rag_pipeline(session_id, document_id, question):
+def rag_pipeline(session_id, document_id, input):
     
-    llm = ChatGroq(api_key=groq_api_key, model="openai/gpt-oss-120b")
+    llm = ChatGroq(api_key=settings.groq_api_key, model="openai/gpt-oss-120b")
 
     vector_store = get_vector_store(document_id)
 
@@ -30,7 +34,7 @@ def rag_pipeline(session_id, document_id, question):
         [
             ("system", contextualize_q_system_prompt),
             MessagesPlaceholder("chat_history"),
-            ("human", {input})
+            ("human", "{input}")
         ]
     )
 
@@ -46,15 +50,27 @@ def rag_pipeline(session_id, document_id, question):
         [
             ("system", system_prompt),
             MessagesPlaceholder("chat_history"),
-            ("human", {input})
+            ("human", "{input}")
         ]
     )
 
     stuff_documents = create_stuff_documents_chain(llm, qa_prompt)
-    rag_chain = create_retrieval_chain(stuff_documents, history_aware_retriever)
+    rag_chain = create_retrieval_chain(history_aware_retriever, stuff_documents)
 
-    chat_store = []
 
-    def get_session_history(session:str) -> BaseChatMessageHistory:
-        if session_id not in chat_store:
-            chat_store[session_id] = ChatMessageHistory()
+    conversational_rag_chain = RunnableWithMessageHistory(
+        rag_chain,
+        get_session_history,
+        input_messages_key = "input",
+        history_messages_key = "chat_history",
+        output_messages_key = "answer"
+    )
+
+    response = conversational_rag_chain.invoke(
+        {"input" : input},
+        config = {
+            "configurable" : {"session_id" : session_id}
+        }
+    )
+
+    return response['answer']
