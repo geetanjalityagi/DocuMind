@@ -54,9 +54,6 @@ def generate_notes(document_id):
     )
 
 
-    # map_prompt = PromptTemplate(template=map_prompt_template, input_variables=["text"])
-    # combine_prompt = PromptTemplate(template=combine_prompt_template, input_variables=["text"])
-
     chain = load_summarize_chain(
         llm,
         chain_type="map_reduce",
