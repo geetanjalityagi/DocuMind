@@ -1,10 +1,12 @@
-from pydantic import BaseModel
-from typing import List
+from pydantic import BaseModel, Field
+from typing import List, Literal
 
 class QuizRequest(BaseModel):
     document_id : str
     difficulty : str
-    number_of_questions : int
+    generation_mode: Literal["full_document", "topic"] = "full_document"
+    topic: str | None = None
+    num_questions: int = Field(default=10, ge=1, le=30)
 
 
 class QuestionSchema(BaseModel):
