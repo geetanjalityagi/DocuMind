@@ -11,8 +11,8 @@ class QuizRequest(BaseModel):
 
 class QuestionSchema(BaseModel):
     question: str
-    options: List[str]
-    correct_answer: str
+    options: list[str] = Field(min_length=4, max_length=4)
+    correct_answer: Literal["A", "B", "C", "D"]
     topic: str
 
 
