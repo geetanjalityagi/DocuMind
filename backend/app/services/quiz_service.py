@@ -25,7 +25,7 @@ def generate_quiz(document_id : str, difficulty : str, generation_mode : str, to
             raise ValueError("Topic is required.")
 
         documents = vectors.similarity_search(topic.strip(), k=4)
-        content = "\n\n".join(doc.page_content for doc in documents if doc.page_contentquiz_service)
+        content = "\n\n".join(doc.page_content for doc in documents if doc.page_content)
 
     else:
         raise ValueError("Invalid generation mode.")
