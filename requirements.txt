@@ -16,3 +16,4 @@ langchain_chroma
 langchain_groq
 langchain-classic
 groq
+streamlit
