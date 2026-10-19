@@ -4,12 +4,12 @@ from app.schemas.flashcards import FlashCardRequest, FlashCardResponse
 from app.services.flashcard_service import generate_flashcards
 
 router = APIRouter(
-    prefix="/quiz",
-    tags=["Quiz"]
+    prefix="/flashcards",
+    tags=["Flashcards"]
 )
 
 @router.post("/", response_model=FlashCardResponse)
-async def quiz(request : FlashCardRequest):
+async def flashcards(request : FlashCardRequest):
     try:
         answer = generate_flashcards(request.document_id,
                       request.generation_mode,
