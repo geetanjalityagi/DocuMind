@@ -1,109 +1,52 @@
 
 import streamlit as st
+import requests 
+import uuid
 
-# --------------------------------------------------
-# 1. PAGE CONFIGURATION
-# Must be the first Streamlit command
-# --------------------------------------------------
+# Configuration
+BACKEND_URL = "http://127.0.0.1:8000"
 
 st.set_page_config(
-    page_title="DocuMind | AI Study Assistant",
-    page_icon="📚",
+    page_title="DocuMind — Interactive Document Intelligence",
+    page_icon="🧠",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="expanded"
 )
 
-# --------------------------------------------------
-# 2. CUSTOM THEME / CSS
-# --------------------------------------------------
-
-st.markdown(
-    """
+# --- CSS STYLING FOR MODERN UI ---
+st.markdown("""
     <style>
-    /* Main application background */
-    .stApp {
-        background-color: #F7F8FC;
-        color: #172746;
+    .main {
+        background-color: #F8FAFC;
     }
-
-    /* Main content spacing */
-    .block-container {
-        padding-top: 2rem;
-        padding-bottom: 2rem;
-        max-width: 1400px;
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 8px;
     }
-
-    /* Sidebar */
-    [data-testid="stSidebar"] {
-        background-color: #172746;
-        border-right: 1px solid #263957;
+    .stTabs [data-baseweb="tab"] {
+        height: 48px;
+        white-space: pre-wrap;
+        border-radius: 8px 8px 0px 0px;
+        padding-top: 10px;
+        padding-bottom: 10px;
     }
-
-    [data-testid="stSidebar"] * {
-        color: #F8FAFC;
+    .stTabs [aria-selected="true"] {
+        background-color: #6366F1 !important;
+        color: white !important;
     }
-
-    /* Sidebar navigation options */
-    [data-testid="stSidebar"] [role="radiogroup"] {
-        gap: 0.45rem;
-    }
-
-    [data-testid="stSidebar"] [role="radio"] {
-        background-color: transparent;
-        padding: 0.75rem 0.85rem;
-        border-radius: 10px;
-        border: 1px solid transparent;
-    }
-
-    [data-testid="stSidebar"] [role="radio"]:hover {
-        background-color: #263957;
-    }
-
-    /* Buttons */
-    .stButton > button {
-        background-color: #4F46E5;
-        color: white;
-        border: none;
-        border-radius: 10px;
-        padding: 0.55rem 1rem;
-        font-weight: 600;
-        transition: background-color 0.2s ease;
-    }
-
-    .stButton > button:hover {
-        background-color: #4338CA;
-        color: white;
-        border: none;
-    }
-
-    /* Inputs and select boxes */
-    .stTextInput input,
-    .stTextArea textarea {
-        border-radius: 10px;
-    }
-
-    /* Cards and containers */
-    [data-testid="stVerticalBlockBorderWrapper"] {
-        border-radius: 14px;
-    }
-
-    /* Hide Streamlit's default menu and footer */
-    #MainMenu {
-        visibility: hidden;
-    }
-
-    footer {
-        visibility: hidden;
-    }
-
-    /* Divider */
-    hr {
-        border-color: #E5E7EB;
+    .flashcard {
+        background-color: #FFFFFF;
+        border: 2px solid #E2E8F0;
+        border-radius: 12px;
+        padding: 24px;
+        text-align: center;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        min-height: 180px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
     </style>
-    """,
-    unsafe_allow_html=True,
-)
+""", unsafe_allow_html=True)
 
 # --------------------------------------------------
 # 3. SIDEBAR BRANDING
@@ -136,7 +79,7 @@ with st.sidebar:
     st.divider()
 
     st.markdown(
-        "<p style='font-size:12px; color:#AAB9D0; "
+        "<p style='font-size:25px; color:#AAB9D0; "
         "font-weight:700; letter-spacing:1px;'>WORKSPACE</p>",
         unsafe_allow_html=True,
     )
