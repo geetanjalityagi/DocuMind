@@ -48,6 +48,22 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+# --- SESSION STATE INITIALIZATION ---
+if "session_id" not in st.session_state:
+    st.session_state["session_id"] = str(uuid.uuid4())
+if "documents" not in st.session_state:
+    st.session_state["documents"] = {}  # doc_id: filename
+if "active_doc_id" not in st.session_state:
+    st.session_state["active_doc_id"] = None
+if "chat_history" not in st.session_state:
+    st.session_state["chat_history"] = []
+if "flashcards" not in st.session_state:
+    st.session_state["flashcards"] = []
+if "flashcard_idx" not in st.session_state:
+    st.session_state["flashcard_idx"] = 0
+if "show_card_answer" not in st.session_state:
+    st.session_state["show_card_answer"] = False
+
 # --------------------------------------------------
 # 3. SIDEBAR BRANDING
 # --------------------------------------------------
