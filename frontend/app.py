@@ -64,147 +64,46 @@ if "flashcard_idx" not in st.session_state:
 if "show_card_answer" not in st.session_state:
     st.session_state["show_card_answer"] = False
 
-# --------------------------------------------------
-# 3. SIDEBAR BRANDING
-# --------------------------------------------------
-
+# --- SIDEBAR: DOCUMENT HUB ---
 with st.sidebar:
-    st.markdown(
-        """
-        <div style="padding: 8px 4px 20px 4px;">
-            <h1 style="
-                font-size: 42px;
-                margin: 0;
-                font-weight: 750;
-                letter-spacing: -1px;
-            ">
-                📚 DocuMind
-            </h1>
-            <p style="
-                font-size: 15px;
-                color: #B8C5D9;
-                margin-top: 5px;
-            ">
-                Your AI-powered study companion
-            </p>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+    st.title("🧠 DocuMind Hub")
+    st.caption("AI-Powered PDF Intelligence")
+    
+    st.divider()
+    
+    # 1. Document Upload
+    st.subheader("📄 Upload Document")
+    uploaded_file = st.file_uploader("Choose a PDF file", type=["pdf"])
+    
+    if uploaded_file is not None:
+        if st.button("Ingest Document", type="primary", use_container_width=True):
+            with st.spinner("Parsing, chunking, and embedding..."):
+                files = {"file": (uploaded_file.name, uploaded_file.getvalue(), "application/pdf")}
+                try:
+                    res = requests.post(f"{BACKEND_URL}/documents/upload", files=files)
+                    if res.status_code == 200:
+                        data = res.json()
+                        doc_id = data["document_id"]
+                        st.session_state["documents"][doc_id] = data["filename"]
+                        st.session_state["active_doc_id"] = doc_id
+                        st.success(f"Successfully processed: {data['filename']}")
+                    else:
+                        st.error("Upload failed. Check backend logs.")
+                except Exception as e:
+                    st.error(f"Error connecting to backend: {e}")
+
+    # 2. Document Selection
+    if st.session_state["documents"]:
+        st.divider()
+        st.subheader("📚 Active Document")
+        doc_options = list(st.session_state["documents"].keys())
+        selected_id = st.selectbox(
+            "Select Document",
+            options=doc_options,
+            format_func=lambda x: st.session_state["documents"][x],
+            index=doc_options.index(st.session_state["active_doc_id"]) if st.session_state["active_doc_id"] in doc_options else 0
+        )
+        st.session_state["active_doc_id"] = selected_id
 
     st.divider()
-
-    st.markdown(
-        "<p style='font-size:25px; color:#AAB9D0; "
-        "font-weight:700; letter-spacing:1px;'>WORKSPACE</p>",
-        unsafe_allow_html=True,
-    )
-
-    # --------------------------------------------------
-    # 4. SIDEBAR NAVIGATION
-    # --------------------------------------------------
-
-    pages = {
-        "🏠  Home": "Home",
-        "📤  Upload PDF": "Upload PDF",
-        "💬  Chat with PDF": "Chat with PDF",
-        "📝  Study Notes": "Study Notes",
-        "🎯  Quiz": "Quiz",
-        "🗂️  Flashcards": "Flashcards",
-    }
-
-    selected_page = st.radio(
-        "Navigation",
-        options=list(pages.keys()),
-        label_visibility="collapsed",
-        key="selected_page",
-    )
-
-    st.divider()
-
-    # Small sidebar footer
-    st.markdown(
-        """
-        <div style="
-            padding: 12px 4px;
-            font-size: 12px;
-            color: #B8C5D9;
-            line-height: 1.8;
-        ">
-            <b style="color:#FFFFFF;">Study smarter, not harder.</b>
-            <br>
-            Upload your documents and turn them into learning resources.
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-# --------------------------------------------------
-# 5. PAGE ROUTING
-# --------------------------------------------------
-
-current_page = pages[selected_page]
-
-if current_page == "Home":
-    st.title("Welcome to StudyMind 👋")
-    st.write(
-        "Your personal AI study space. Upload a PDF to get started."
-    )
-
-    col1, col2, col3 = st.columns(3)
-
-    with col1:
-        with st.container(border=True):
-            st.subheader("📤 Upload PDF")
-            st.write("Upload your study material and prepare it for learning.")
-            if st.button("Upload a document", key="home_upload", use_container_width=True):
-                st.session_state["selected_page"] = "📤  Upload PDF"
-                st.rerun()
-
-    with col2:
-        with st.container(border=True):
-            st.subheader("💬 Chat with PDF")
-            st.write("Ask questions and understand your document.")
-            if st.button("Start chatting", key="home_chat", use_container_width=True):
-                st.session_state["selected_page"] = "💬  Chat with PDF"
-                st.rerun()
-
-    with col3:
-        with st.container(border=True):
-            st.subheader("🗂️ Flashcards")
-            st.write("Revise important concepts with AI-generated flashcards.")
-            if st.button("Study flashcards", key="home_flashcards", use_container_width=True):
-                st.session_state["selected_page"] = "🗂️  Flashcards"
-                st.rerun()
-
-    st.divider()
-    st.subheader("Your learning workspace")
-    st.info(
-        "Your uploaded documents and recent activity will appear here "
-        "when we connect the document management functionality."
-    )
-
-elif current_page == "Upload PDF":
-    st.title("📤 Upload your study material")
-    st.write("Upload a PDF to start learning with StudyMind.")
-    st.info("The PDF upload interface will be implemented in the next step.")
-
-elif current_page == "Chat with PDF":
-    st.title("💬 Chat with your document")
-    st.write("Ask questions and get answers grounded in your PDF.")
-    st.info("The document chat interface will be implemented next.")
-
-elif current_page == "Study Notes":
-    st.title("📝 Generate study notes")
-    st.write("Turn lengthy documents into clear, structured notes.")
-    st.info("The notes generation interface will be implemented next.")
-
-elif current_page == "Quiz":
-    st.title("🎯 Test your knowledge")
-    st.write("Generate quizzes and check your understanding.")
-    st.info("The quiz interface will be implemented next.")
-
-elif current_page == "Flashcards":
-    st.title("🗂️ AI Flashcards")
-    st.write("Revise concepts using question-and-answer flashcards.")
-    st.info("The flashcard interface will be connected to your existing backend next.")
+    st.caption(f"Session ID: `{st.session_state['session_id'][:8]}...`")
