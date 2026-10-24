@@ -8,7 +8,7 @@ router = APIRouter(
 )
 
 @router.post("/{document_id}")
-async def notes(document_id : str):
+def notes(document_id : str):
 
     try:
         notes = generate_notes(document_id)
