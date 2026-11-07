@@ -78,11 +78,11 @@ section[data-testid="stSidebar"] * {
     color: var(--text-primary) !important;
     background: rgba(99,102,241,0.08) !important;
 }
-# .stTabs [aria-selected="true"] {
-#     background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)) !important;
-#     color: #fff !important;
-#     box-shadow: 0 4px 15px var(--accent-glow) !important;
-# }
+/* .stTabs [aria-selected="true"] {
+    background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)) !important;
+    color: #fff !important;
+    box-shadow: 0 4px 15px var(--accent-glow) !important;
+} */
 
 .stTabs [data-baseweb="tab-highlight"] { display: none !important; }
 .stTabs [data-baseweb="tab-border"]    { display: none !important; }

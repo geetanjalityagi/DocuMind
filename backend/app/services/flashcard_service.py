@@ -4,7 +4,7 @@ from langchain_groq import ChatGroq
 from app.services.embedding_services import get_vector_store
 from app.schemas.flashcards import FlashCardResponse
 
-def generate_flashcards(document_id : str, generation_mode : str, topic : str | None,  num_flashcards: int = int)-> dict:
+def generate_flashcards(document_id : str, generation_mode : str, topic : str | None,  num_flashcards: int = 10) -> dict:
 
     llm = ChatGroq(api_key=settings.groq_api_key, model="openai/gpt-oss-120b")
 
