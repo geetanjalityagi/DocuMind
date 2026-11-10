@@ -414,18 +414,6 @@ with st.sidebar:
             st.session_state["active_doc_id"] = selected_doc
             st.rerun()
 
-        meta = st.session_state["documents"][selected_doc]
-        size_kb = meta.get("file_size", 0) / 1024
-        size_str = f"{size_kb:.0f} KB" if size_kb < 1024 else f"{size_kb / 1024:.1f} MB"
-        st.markdown(f"""
-        <div style="background: #141416; border: 1px solid var(--border-subtle); border-radius: 8px; padding: 10px 12px; font-size: 0.78rem; color: #A1A1AA; margin-bottom: 12px;">
-            <div style="font-weight: 600; color: #FFFFFF; word-break: break-all; margin-bottom: 4px;">
-                📄 {meta['filename']}
-            </div>
-            <div>🧩 {meta['chunks_size']} chunks &nbsp;·&nbsp; 📦 {size_str}</div>
-        </div>
-        """, unsafe_allow_html=True)
-
     # 4. Upload PDF
     uploaded_pdf = st.file_uploader(
         "Upload PDF",
