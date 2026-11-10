@@ -55,6 +55,16 @@ html, body, [data-testid="stAppViewContainer"], .main,
 section[data-testid="stSidebar"] {
     background-color: var(--bg-sidebar) !important;
     border-right: 1px solid var(--border-subtle) !important;
+    z-index: 100 !important;
+}
+section[data-testid="stSidebar"] .block-container {
+    padding-top: 1.2rem !important;
+    padding-bottom: 1rem !important;
+    padding-left: 0.85rem !important;
+    padding-right: 0.85rem !important;
+}
+section[data-testid="stSidebar"] hr {
+    margin: 8px 0 !important;
 }
 section[data-testid="stSidebar"] * {
     color: var(--text-primary) !important;
@@ -62,15 +72,16 @@ section[data-testid="stSidebar"] * {
 
 /* ── Sidebar Navigation Tabs ─────────────────────────────────────────────── */
 section[data-testid="stSidebar"] div.stButton > button {
-    font-size: 1.12rem !important;
-    padding: 12px 18px !important;
+    font-size: 0.88rem !important;
+    padding: 7px 12px !important;
+    min-height: 36px !important;
     text-align: left !important;
     justify-content: flex-start !important;
-    border-radius: 9px !important;
+    border-radius: 8px !important;
     font-weight: 500 !important;
-    margin-bottom: 5px !important;
+    margin-bottom: 3px !important;
     letter-spacing: 0.01em !important;
-    transition: all 0.2s ease !important;
+    transition: all 0.15s ease !important;
 }
 /* Active Tab: Refined dark charcoal with subtle border & accent line (no glaring white!) */
 section[data-testid="stSidebar"] div.stButton > button[kind="primary"] {
@@ -175,10 +186,10 @@ label {
     border-bottom: none !important;
 }
 
-/* ── Fixed Chat Input Bar at Bottom ─────────────────────────────────────── */
+/* ── Fixed Chat Input Bar at Bottom (Restricted to Workspace & Constrained) ── */
 .main .block-container {
     padding-top: 2rem !important;
-    padding-bottom: 7.5rem !important;
+    padding-bottom: 5.5rem !important;
     max-width: 950px !important;
 }
 
@@ -188,24 +199,24 @@ div:has(> [data-testid="stChatInput"]) {
 }
 
 [data-testid="stBottom"] {
-    position: fixed !important;
-    bottom: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
     background: #000000 !important;
     border-top: 1px solid #1C1C22 !important;
-    padding-top: 12px !important;
-    padding-bottom: 22px !important;
-    z-index: 99 !important;
+    padding-top: 6px !important;
+    padding-bottom: 8px !important;
+    z-index: 90 !important;
 }
 
 [data-testid="stBottom"] > div {
     background: transparent !important;
-    max-width: 950px !important;
+    max-width: 800px !important;
     margin: 0 auto !important;
+    width: 100% !important;
 }
 
 [data-testid="stChatInput"] {
+    max-width: 800px !important;
+    margin: 0 auto !important;
+    width: 100% !important;
     background-color: #0E0E12 !important;
     border: 1px solid #27272A !important;
     border-radius: 14px !important;
@@ -443,13 +454,13 @@ def handle_document_upload(file):
 
 # ─── SIDEBAR: NAVIGATION & DOCUMENT HUB ───────────────────────────────────────
 with st.sidebar:
-    # 1. Header with Increased Font Sizes
+    # 1. Header (Compact & Balanced)
     st.markdown("""
-    <div style="padding: 10px 4px 18px; text-align: center;">
-        <div style="font-size: 2.2rem; font-weight: 800; color: #FFFFFF; display: flex; align-items: center; justify-content: center; gap: 8px; letter-spacing: -0.02em; line-height: 1.2; transform: translateX(-14px);">
-            <span style="font-size: 2.0rem; line-height: 1;">🧠</span> <span>DocuMind</span>
+    <div style="padding: 4px 2px 8px; text-align: center;">
+        <div style="font-size: 1.7rem; font-weight: 800; color: #FFFFFF; display: flex; align-items: center; justify-content: center; gap: 7px; letter-spacing: -0.02em; line-height: 1.15; transform: translateX(-10px);">
+            <span style="font-size: 1.5rem; line-height: 1;">🧠</span> <span>DocuMind</span>
         </div>
-        <div style="font-size: 1.05rem; color: #A1A1AA; font-weight: 500; margin-top: 6px; text-align: center;">
+        <div style="font-size: 0.86rem; color: #A1A1AA; font-weight: 500; margin-top: 3px; text-align: center;">
             AI Document Intelligence
         </div>
     </div>
@@ -472,8 +483,8 @@ with st.sidebar:
 
     st.divider()
 
-    # 3. Main Navigation Tabs (Buttons with Refined Dark Accent - No Stark White!)
-    st.markdown("<div style='font-size: 0.76rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #71717A; margin-bottom: 10px; text-align: center;'>Workspace Navigation</div>", unsafe_allow_html=True)
+    # 3. Main Navigation Tabs (Compact & Not Congested)
+    st.markdown("<div style='font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #71717A; margin-bottom: 6px; text-align: center;'>Workspace Navigation</div>", unsafe_allow_html=True)
 
     nav_tabs = [
         ("💬 Chat", "💬 Chat"),
@@ -495,7 +506,7 @@ with st.sidebar:
     # 4. Active Document (Positioned BELOW the workspace navigation)
     if st.session_state["documents"]:
         st.divider()
-        st.markdown("<div style='font-size: 0.76rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #71717A; margin-bottom: 8px; text-align: center;'>Active Document</div>", unsafe_allow_html=True)
+        st.markdown("<div style='font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #71717A; margin-bottom: 5px; text-align: center;'>Active Document</div>", unsafe_allow_html=True)
 
         doc_options = list(st.session_state["documents"].keys())
         cur_doc = st.session_state["active_doc_id"]
@@ -522,7 +533,7 @@ with st.sidebar:
             st.session_state["chat_history"] = []
             st.rerun()
     with col_s2:
-        st.markdown(f"<div style='font-size: 0.72rem; color: #52525B; padding-top: 10px; text-align: right;'>Session `{st.session_state['session_id'][:6]}`</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='font-size: 0.70rem; color: #52525B; padding-top: 4px; text-align: right;'>Session `{st.session_state['session_id'][:6]}`</div>", unsafe_allow_html=True)
 
 
 # ─── FEATURE RENDERERS ────────────────────────────────────────────────────────
