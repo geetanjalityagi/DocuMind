@@ -656,6 +656,23 @@ def render_adaptive_page(active_doc_id):
         </div>
         """, unsafe_allow_html=True)
 
+        rec_act = rec.get("recommended_activity", "quiz_practice")
+        rec_top = rec.get("topic", "")
+        rec_diff = rec.get("recommended_difficulty", "medium")
+        if st.button(f"🚀 Start Recommended Activity: {rec_top} ({rec_diff.title()})", type="primary", use_container_width=True, key="btn_start_rec"):
+            if "quiz" in rec_act:
+                st.session_state["qz_mode"] = "topic"
+                st.session_state["qz_topic"] = rec_top
+                st.session_state["qz_diff"] = rec_diff
+                st.session_state["active_page"] = "❓ Quiz"
+            elif "flashcard" in rec_act:
+                st.session_state["fc_mode"] = "topic"
+                st.session_state["fc_topic"] = rec_top
+                st.session_state["active_page"] = "🃏 Flashcards"
+            else:
+                st.session_state["active_page"] = "📝 Study Notes"
+            st.rerun()
+
     # Weakness & Cognitive Patterns Section
     weaknesses = profile.get("weaknesses", [])
     if weaknesses:
@@ -718,6 +735,80 @@ def render_adaptive_page(active_doc_id):
             </div>
             """, unsafe_allow_html=True)
 
+    # Prerequisite & Adaptive Learning Path Roadmap
+    try:
+        path_res = requests.get(f"{BACKEND_URL}/learning/path/{st.session_state['session_id']}/{active_doc_id}", timeout=10)
+        if path_res.status_code == 200:
+            path_data = path_res.json()
+            nodes = path_data.get("nodes", [])
+            if nodes:
+                st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
+                st.markdown("### 🗺️ Adaptive Prerequisite Learning Path")
+                st.markdown(
+                    f"<div style='font-size: 0.82rem; color: var(--text-muted); margin-bottom: 14px;'>"
+                    f"Progression gates subsequent concepts until prerequisite mastery reaches 60%. "
+                    f"Completed: <b>{path_data.get('completed_topics_count', 0)}/{path_data.get('total_topics_count', len(nodes))}</b> modules."
+                    f"</div>",
+                    unsafe_allow_html=True,
+                )
+
+                for node in nodes:
+                    n_status = node.get("status", "ready")
+                    n_mastery = node.get("mastery_score", 0.0)
+                    n_bkt = node.get("bkt_p_known", 0.20) * 100.0
+                    n_unlocked = node.get("is_unlocked", True)
+                    n_prereqs = node.get("prerequisites", [])
+
+                    if n_status == "mastered":
+                        status_badge = '<span class="badge badge-mastered">🏆 Mastered</span>'
+                        status_border = "var(--success)"
+                    elif n_status == "in_progress":
+                        status_badge = '<span class="badge badge-developing">⚡ In Progress</span>'
+                        status_border = "var(--accent-glow)"
+                    elif n_status == "review_due":
+                        status_badge = '<span class="badge badge-struggling">⏳ Review Due</span>'
+                        status_border = "var(--warning)"
+                    elif n_status == "locked":
+                        status_badge = '<span class="badge" style="background:#27272A; color:#A1A1AA;">🔒 Locked</span>'
+                        status_border = "#27272A"
+                    else:
+                        status_badge = '<span class="badge" style="background:#1E293B; color:#60A5FA;">🔓 Unlocked</span>'
+                        status_border = "rgba(96, 165, 250, 0.4)"
+
+                    prereq_text = f"Prerequisite: <i>{', '.join(n_prereqs)}</i> (min 60% mastery)" if n_prereqs else "Foundational module (No prerequisites)"
+
+                    st.markdown(f"""
+                    <div class="black-card" style="border-left: 3px solid {status_border}; padding: 16px 20px; margin-bottom: 10px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <div>
+                                <span style="font-size: 0.74rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Step {node.get('order_index', 1)}</span>
+                                <span style="font-size: 1.05rem; font-weight: 600; color: #FFFFFF; margin-left: 8px;">{node.get('topic')}</span>
+                            </div>
+                            <div>{status_badge}</div>
+                        </div>
+                        <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 8px;">
+                            {prereq_text}
+                        </div>
+                        <div style="display: flex; gap: 20px; font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 8px;">
+                            <span>Mastery: <b>{n_mastery:.0f}%</b></span>
+                            <span>BKT Knowledge: <b>{n_bkt:.1f}%</b></span>
+                        </div>
+                        <div style="font-size: 0.82rem; color: #D4D4D8;">
+                            🎯 <b>Next step:</b> {node.get('recommended_next_step', '')}
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+
+                    if n_unlocked:
+                        if st.button(f"🎯 Practice '{node.get('topic')}'", key=f"btn_path_topic_{node.get('order_index')}"):
+                            st.session_state["qz_mode"] = "topic"
+                            st.session_state["qz_topic"] = node.get("topic")
+                            st.session_state["qz_diff"] = "easy" if n_mastery < 40 else ("medium" if n_mastery < 75 else "hard")
+                            st.session_state["active_page"] = "❓ Quiz"
+                            st.rerun()
+    except Exception:
+        pass
+
 
 # ═════════════════════════════════════════════════════════════════════════════
 # 3. QUIZ ASSESSMENT PAGE
@@ -737,15 +828,24 @@ def render_quiz_page(active_doc_id):
         return
 
     # Configuration controls
+    if "qz_diff" not in st.session_state:
+        st.session_state["qz_diff"] = "medium"
+    if "qz_mode" not in st.session_state:
+        st.session_state["qz_mode"] = "full_document"
+    if "qz_topic" not in st.session_state:
+        st.session_state["qz_topic"] = ""
+    if "qz_count" not in st.session_state:
+        st.session_state["qz_count"] = 5
+
     qc1, qc2, qc3, qc4 = st.columns([1, 1, 1, 1])
     with qc1:
         difficulty = st.selectbox("Difficulty", ["easy", "medium", "hard"], key="qz_diff")
     with qc2:
         q_mode = st.selectbox("Scope", ["full_document", "topic"], key="qz_mode")
     with qc3:
-        q_topic = st.text_input("Topic", value="", key="qz_topic", placeholder="(optional)")
+        q_topic = st.text_input("Topic", key="qz_topic", placeholder="(optional)")
     with qc4:
-        num_q = st.number_input("Questions", min_value=1, max_value=20, value=5, key="qz_count")
+        num_q = st.number_input("Questions", min_value=1, max_value=20, key="qz_count")
 
     if st.button("Generate Quiz", type="primary"):
         with st.spinner("Generating questions…"):
@@ -927,13 +1027,20 @@ def render_flashcards_page(active_doc_id):
         st.info("Select or upload a PDF document in the sidebar to generate flashcards.")
         return
 
+    if "fc_mode" not in st.session_state:
+        st.session_state["fc_mode"] = "full_document"
+    if "fc_topic" not in st.session_state:
+        st.session_state["fc_topic"] = ""
+    if "fc_count" not in st.session_state:
+        st.session_state["fc_count"] = 5
+
     fc1, fc2, fc3 = st.columns([2, 2, 1])
     with fc1:
         gen_mode = st.selectbox("Scope", ["full_document", "topic"], key="fc_mode")
     with fc2:
-        topic_input = st.text_input("Topic (if scope = topic)", value="", key="fc_topic", placeholder="e.g. Relational Model")
+        topic_input = st.text_input("Topic (if scope = topic)", key="fc_topic", placeholder="e.g. Relational Model")
     with fc3:
-        num_cards = st.number_input("Count", min_value=1, max_value=20, value=5, key="fc_count")
+        num_cards = st.number_input("Count", min_value=1, max_value=20, key="fc_count")
 
     if st.button("Generate Deck", type="primary"):
         with st.spinner("Creating flashcards…"):
