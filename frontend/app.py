@@ -175,6 +175,76 @@ label {
     border-bottom: none !important;
 }
 
+/* ── Fixed Chat Input Bar at Bottom ─────────────────────────────────────── */
+.main .block-container {
+    padding-top: 2rem !important;
+    padding-bottom: 7.5rem !important;
+    max-width: 950px !important;
+}
+
+[data-testid="stBottom"],
+div:has(> [data-testid="stChatInput"]) {
+    background-color: #000000 !important;
+}
+
+[data-testid="stBottom"] {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    background: #000000 !important;
+    border-top: 1px solid #1C1C22 !important;
+    padding-top: 12px !important;
+    padding-bottom: 22px !important;
+    z-index: 99 !important;
+}
+
+[data-testid="stBottom"] > div {
+    background: transparent !important;
+    max-width: 950px !important;
+    margin: 0 auto !important;
+}
+
+[data-testid="stChatInput"] {
+    background-color: #0E0E12 !important;
+    border: 1px solid #27272A !important;
+    border-radius: 14px !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7) !important;
+    transition: all 0.2s ease !important;
+}
+
+[data-testid="stChatInput"]:focus-within {
+    border-color: #52525B !important;
+    box-shadow: 0 0 0 1px #52525B, 0 6px 24px rgba(0, 0, 0, 0.8) !important;
+}
+
+[data-testid="stChatInput"] textarea {
+    color: #FFFFFF !important;
+    background: transparent !important;
+    font-size: 0.95rem !important;
+    font-family: inherit !important;
+    padding: 12px 14px !important;
+}
+
+[data-testid="stChatInput"] textarea::placeholder {
+    color: #71717A !important;
+}
+
+[data-testid="stChatInput"] button {
+    background: transparent !important;
+    border: none !important;
+    color: #A1A1AA !important;
+    padding-right: 12px !important;
+}
+
+[data-testid="stChatInput"] button:hover {
+    color: #FFFFFF !important;
+}
+
+footer {
+    display: none !important;
+}
+
 /* ── Cards & Surfaces ────────────────────────────────────────────────────── */
 .black-card {
     background: var(--bg-card);
@@ -376,8 +446,8 @@ with st.sidebar:
     # 1. Header with Increased Font Sizes
     st.markdown("""
     <div style="padding: 10px 4px 18px; text-align: center;">
-        <div style="font-size: 2.2rem; font-weight: 800; color: #FFFFFF; display: flex; align-items: center; justify-content: center; gap: 10px; letter-spacing: -0.02em; line-height: 1.2;">
-            <span>🧠</span> DocuMind
+        <div style="font-size: 2.2rem; font-weight: 800; color: #FFFFFF; display: flex; align-items: center; justify-content: center; gap: 8px; letter-spacing: -0.02em; line-height: 1.2; transform: translateX(-14px);">
+            <span style="font-size: 2.0rem; line-height: 1;">🧠</span> <span>DocuMind</span>
         </div>
         <div style="font-size: 1.05rem; color: #A1A1AA; font-weight: 500; margin-top: 6px; text-align: center;">
             AI Document Intelligence
