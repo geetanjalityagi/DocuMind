@@ -60,32 +60,48 @@ section[data-testid="stSidebar"] * {
     color: var(--text-primary) !important;
 }
 
-/* ── Radio Navigation (Sidebar Menu) ─────────────────────────────────────── */
-div[data-testid="stRadio"] > div {
-    gap: 4px;
-    background: transparent !important;
-}
-div[data-testid="stRadio"] label {
-    background: transparent !important;
-    border-radius: 8px !important;
-    padding: 8px 12px !important;
-    transition: all 0.15s ease !important;
-    color: var(--text-secondary) !important;
-    font-size: 0.92rem !important;
+/* ── Sidebar Navigation Tabs ─────────────────────────────────────────────── */
+section[data-testid="stSidebar"] div.stButton > button {
+    font-size: 1.12rem !important;
+    padding: 12px 18px !important;
+    text-align: left !important;
+    justify-content: flex-start !important;
+    border-radius: 9px !important;
     font-weight: 500 !important;
-    cursor: pointer;
+    margin-bottom: 5px !important;
+    letter-spacing: 0.01em !important;
+    transition: all 0.2s ease !important;
+}
+/* Active Tab: Refined dark charcoal with subtle border & accent line (no glaring white!) */
+section[data-testid="stSidebar"] div.stButton > button[kind="primary"] {
+    background: #1C1C22 !important;
+    color: #FFFFFF !important;
+    border: 1px solid #383842 !important;
+    border-left: 4px solid #818CF8 !important;
+    font-weight: 600 !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4) !important;
+}
+section[data-testid="stSidebar"] div.stButton > button[kind="primary"]:hover {
+    background: #24242C !important;
+    border-color: #52525E !important;
+    color: #FFFFFF !important;
+}
+/* Inactive Tabs: Clean transparent/dark with subtle hover */
+section[data-testid="stSidebar"] div.stButton > button[kind="secondary"] {
+    background-color: transparent !important;
+    color: #A1A1AA !important;
     border: 1px solid transparent !important;
 }
-div[data-testid="stRadio"] label:hover {
-    background: #18181B !important;
+section[data-testid="stSidebar"] div.stButton > button[kind="secondary"]:hover {
+    background-color: #141418 !important;
+    border-color: #27272A !important;
     color: #FFFFFF !important;
-    border-color: var(--border-subtle) !important;
 }
-div[data-testid="stRadio"] label[data-checked="true"] {
-    background: #1E1E24 !important;
-    color: #FFFFFF !important;
-    border-color: var(--border-hover) !important;
-    font-weight: 600 !important;
+section[data-testid="stSidebar"] div[data-testid="column"] div.stButton > button {
+    font-size: 0.82rem !important;
+    padding: 6px 10px !important;
+    text-align: center !important;
+    justify-content: center !important;
 }
 
 /* ── Buttons (Clean Minimalist Monochrome) ──────────────────────────────── */
@@ -357,47 +373,60 @@ def handle_document_upload(file):
 
 # ─── SIDEBAR: NAVIGATION & DOCUMENT HUB ───────────────────────────────────────
 with st.sidebar:
-    # 1. Header
+    # 1. Header with Increased Font Sizes
     st.markdown("""
-    <div style="padding: 10px 4px 16px;">
-        <div style="font-size: 1.4rem; font-weight: 700; color: #FFFFFF; display: flex; align-items: center; gap: 8px;">
+    <div style="padding: 10px 4px 18px;">
+        <div style="font-size: 2.2rem; font-weight: 800; color: #FFFFFF; display: flex; align-items: center; gap: 10px; letter-spacing: -0.02em; line-height: 1.2;">
             <span>🧠</span> DocuMind
         </div>
-        <div style="font-size: 0.78rem; color: #71717A; margin-top: 2px;">
+        <div style="font-size: 1.05rem; color: #A1A1AA; font-weight: 500; margin-top: 6px;">
             AI Document Intelligence
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-    # 2. Main Navigation Menu
-    nav_options = [
-        "💬 Chat",
-        "🎯 Adaptive Engine",
-        "❓ Quiz",
-        "🃏 Flashcards",
-        "📝 Study Notes",
-        "🗂️ Topics",
-    ]
-
-    # Pre-select matching index
-    current_idx = nav_options.index(st.session_state["active_page"]) if st.session_state["active_page"] in nav_options else 0
-    selected_nav = st.radio(
-        "Navigation",
-        options=nav_options,
-        index=current_idx,
+    # 2. Upload Box (Positioned ABOVE the tabs)
+    uploaded_pdf = st.file_uploader(
+        "Upload PDF",
+        type=["pdf"],
+        key="sidebar_file_uploader",
         label_visibility="collapsed",
-        key="sidebar_navigation_radio",
     )
-    if selected_nav != st.session_state["active_page"]:
-        st.session_state["active_page"] = selected_nav
-        st.rerun()
+    if uploaded_pdf is not None:
+        if st.button("Upload Document", type="primary", use_container_width=True, key="btn_side_upload"):
+            ok, res = handle_document_upload(uploaded_pdf)
+            if ok:
+                st.rerun()
+            else:
+                st.error(res)
 
     st.divider()
 
-    # 3. Active Document Hub
-    st.markdown("<div style='font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: #71717A; margin-bottom: 8px;'>Active Document</div>", unsafe_allow_html=True)
+    # 3. Main Navigation Tabs (Buttons with Refined Dark Accent - No Stark White!)
+    st.markdown("<div style='font-size: 0.76rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #71717A; margin-bottom: 10px;'>Workspace Navigation</div>", unsafe_allow_html=True)
 
+    nav_tabs = [
+        ("💬 Chat", "💬 Chat"),
+        ("🎯 Adaptive Engine", "🎯 Adaptive Engine"),
+        ("❓ Quiz", "❓ Quiz"),
+        ("🃏 Flashcards", "🃏 Flashcards"),
+        ("📝 Study Notes", "📝 Study Notes"),
+        ("🗂️ Topics", "🗂️ Topics"),
+    ]
+
+    for label, page_key in nav_tabs:
+        is_active = (st.session_state["active_page"] == page_key)
+        btn_type = "primary" if is_active else "secondary"
+        if st.button(label, key=f"nav_tab_{page_key}", use_container_width=True, type=btn_type):
+            if st.session_state["active_page"] != page_key:
+                st.session_state["active_page"] = page_key
+                st.rerun()
+
+    # 4. Active Document (Positioned BELOW the workspace navigation)
     if st.session_state["documents"]:
+        st.divider()
+        st.markdown("<div style='font-size: 0.76rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #71717A; margin-bottom: 8px;'>Active Document</div>", unsafe_allow_html=True)
+
         doc_options = list(st.session_state["documents"].keys())
         cur_doc = st.session_state["active_doc_id"]
         doc_idx = doc_options.index(cur_doc) if cur_doc in doc_options else 0
@@ -413,21 +442,6 @@ with st.sidebar:
         if selected_doc != st.session_state["active_doc_id"]:
             st.session_state["active_doc_id"] = selected_doc
             st.rerun()
-
-    # 4. Upload PDF
-    uploaded_pdf = st.file_uploader(
-        "Upload PDF",
-        type=["pdf"],
-        key="sidebar_file_uploader",
-        label_visibility="collapsed",
-    )
-    if uploaded_pdf is not None:
-        if st.button("Upload Document", type="primary", use_container_width=True, key="btn_side_upload"):
-            ok, res = handle_document_upload(uploaded_pdf)
-            if ok:
-                st.rerun()
-            else:
-                st.error(res)
 
     st.divider()
 
