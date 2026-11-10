@@ -8,6 +8,9 @@ UPLOAD_DIR = BASE_DIR / "data" / "uploads"
 
 CHROMA_DIR = BASE_DIR / "data" / "chroma_db"
 
+PROFILES_DIR = BASE_DIR / "data" / "learner_profiles"
+PROFILES_DIR.mkdir(parents=True, exist_ok=True)
+
 class Settings(BaseSettings):
 
     groq_api_key: str

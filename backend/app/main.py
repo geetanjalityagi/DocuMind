@@ -6,6 +6,7 @@ from app.api.routes.notes import router as notes_router
 from app.api.routes.topics import router as topics_router
 from app.api.routes.quiz import router as quiz_router
 from app.api.routes.flashcards import router as flashcard_router
+from app.api.routes.learning import router as learning_router
 
 app = FastAPI()
 
@@ -20,6 +21,8 @@ app.include_router(topics_router)
 app.include_router(quiz_router)
 
 app.include_router(flashcard_router)
+
+app.include_router(learning_router)
 
 @app.get('/')
 def run():

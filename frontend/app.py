@@ -7,7 +7,7 @@ import time
 BACKEND_URL = "http://127.0.0.1:8000"
 
 st.set_page_config(
-    page_title="DocuMind — AI Document Intelligence",
+    page_title="DocuMind — AI Document Intelligence & Adaptive Learning",
     page_icon="🧠",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -177,7 +177,7 @@ details summary {
     padding: 26px 22px 20px;
     text-align: center;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    min-height: 210px;
+    min-height: 220px;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
@@ -218,6 +218,55 @@ details summary {
     font-size: 0.88rem;
     color: var(--text-secondary);
     line-height: 1.5;
+}
+
+/* ── Adaptive Engine & Badges ────────────────────────────────────────────── */
+.badge-mastered {
+    background: rgba(52, 211, 153, 0.15);
+    color: #34D399;
+    border: 1px solid rgba(52, 211, 153, 0.3);
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 0.74rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+.badge-developing {
+    background: rgba(99, 102, 241, 0.15);
+    color: #818CF8;
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 0.74rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+.badge-struggling {
+    background: rgba(248, 113, 113, 0.15);
+    color: #F87171;
+    border: 1px solid rgba(248, 113, 113, 0.3);
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 0.74rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+.rec-box {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(168, 85, 247, 0.12));
+    border: 1px solid rgba(99, 102, 241, 0.35);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 24px;
+}
+.path-node {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 /* ── Flashcard ───────────────────────────────────────────────────────────── */
@@ -518,6 +567,7 @@ defaults = {
     "quiz_questions": None,
     "quiz_submitted": False,
     "quiz_answers": {},
+    "quiz_confidences": {},
 }
 for key, val in defaults.items():
     if key not in st.session_state:
@@ -566,7 +616,7 @@ with st.sidebar:
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;">DocuMind</div>
         <div style="font-size:0.80rem; color:#64748B; margin-top:2px;">
-            AI-Powered Document Intelligence
+            AI Document Intelligence & Adaptive Learning
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -890,7 +940,7 @@ def render_quiz(active_doc_id):
             ❓ Multiple Choice Assessment
         </div>
         <div style="font-size:0.84rem; color:var(--text-muted); margin-top:4px;">
-            Auto-generated quizzes with configurable difficulty and instant auto-grading.
+            Auto-generated quizzes with confidence tracking and instant Bayesian calibration.
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -922,6 +972,7 @@ def render_quiz(active_doc_id):
                     st.session_state["quiz_questions"] = res.json().get("questions", [])
                     st.session_state["quiz_submitted"] = False
                     st.session_state["quiz_answers"] = {}
+                    st.session_state["quiz_confidences"] = {}
                     st.rerun()
                 else:
                     st.error("Failed to generate quiz.")
@@ -935,10 +986,11 @@ def render_quiz(active_doc_id):
         if not st.session_state["quiz_submitted"]:
             with st.form("quiz_form"):
                 user_answers = {}
+                user_confidences = {}
                 for i, q in enumerate(questions):
                     st.markdown(f"""
                     <div class="quiz-question-card">
-                        <div class="quiz-question-num">Question {i + 1} of {len(questions)}</div>
+                        <div class="quiz-question-num">Question {i + 1} of {len(questions)} &nbsp;·&nbsp; Topic: {q.get('topic', 'General')}</div>
                         <div class="quiz-question-text">{q['question']}</div>
                     </div>
                     """, unsafe_allow_html=True)
@@ -948,14 +1000,61 @@ def render_quiz(active_doc_id):
                         key=f"q_{i}",
                         label_visibility="collapsed",
                     )
+                    user_confidences[i] = st.slider(
+                        f"Confidence in your answer (Q{i + 1})",
+                        min_value=10,
+                        max_value=100,
+                        value=70,
+                        step=10,
+                        key=f"conf_{i}",
+                        help="Confidence rating helps the Adaptive Engine calibrate your metacognition and detect misconceptions.",
+                    )
 
-                submitted = st.form_submit_button("📊 Submit Quiz", use_container_width=True)
+                submitted = st.form_submit_button("📊 Submit Quiz to Adaptive Engine", use_container_width=True)
                 if submitted:
                     st.session_state["quiz_answers"] = user_answers
+                    st.session_state["quiz_confidences"] = user_confidences
                     st.session_state["quiz_submitted"] = True
+
+                    # Package attempts for the adaptive learning engine
+                    attempts = []
+                    for i, q in enumerate(questions):
+                        selected = user_answers.get(i, "")
+                        correct_letter = q["correct_answer"]
+                        correct_option = (
+                            q["options"]["ABCD".index(correct_letter)]
+                            if len(correct_letter) == 1 and correct_letter in "ABCD"
+                            else correct_letter
+                        )
+                        is_correct = selected == correct_option
+                        attempts.append({
+                            "topic": q.get("topic", "General"),
+                            "difficulty": difficulty,
+                            "is_correct": is_correct,
+                            "confidence": float(user_confidences.get(i, 70)),
+                            "question_text": q.get("question"),
+                            "user_answer": selected,
+                            "correct_answer": correct_option,
+                        })
+
+                    # Send to backend
+                    try:
+                        requests.post(
+                            f"{BACKEND_URL}/learning/submit-quiz",
+                            json={
+                                "session_id": st.session_state["session_id"],
+                                "document_id": active_doc_id,
+                                "attempts": attempts,
+                            },
+                            timeout=10,
+                        )
+                    except Exception:
+                        pass
+
                     st.rerun()
         else:
             user_answers = st.session_state["quiz_answers"]
+            user_confidences = st.session_state.get("quiz_confidences", {})
             score = 0
             total = len(questions)
 
@@ -973,13 +1072,24 @@ def render_quiz(active_doc_id):
 
                 border_color = "var(--success)" if is_correct else "var(--danger)"
                 icon = "✅" if is_correct else "❌"
+                conf_val = user_confidences.get(i, 70)
+
+                # Calibration check for this question
+                calib_badge = ""
+                if not is_correct and conf_val >= 70:
+                    calib_badge = '<span style="color:#F87171; font-size:0.8rem; font-weight:700;">⚠️ Potential Misconception (High Confidence on Incorrect Answer)</span>'
+                elif is_correct and conf_val <= 40:
+                    calib_badge = '<span style="color:#818CF8; font-size:0.8rem; font-weight:700;">💡 Tentative Knowledge (Correct despite Low Confidence)</span>'
 
                 st.markdown(f"""
                 <div class="quiz-question-card" style="border-color:{border_color};">
-                    <div class="quiz-question-num">{icon} Question {i + 1}</div>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div class="quiz-question-num">{icon} Question {i + 1} &nbsp;·&nbsp; {q.get('topic', 'General')}</div>
+                        {calib_badge}
+                    </div>
                     <div class="quiz-question-text">{q['question']}</div>
                     <div style="font-size:0.88rem; color:var(--text-secondary);">
-                        Your answer: <b>{selected}</b><br/>
+                        Your answer: <b>{selected}</b> (Confidence: {conf_val}%)<br/>
                         Correct answer: <b style="color:var(--success);">{correct_option}</b>
                     </div>
                 </div>
@@ -998,14 +1108,22 @@ def render_quiz(active_doc_id):
                 </div>
                 <div style="font-size:0.88rem; color:var(--text-muted); margin-top:4px;">
                     {'🎉 Excellent work!' if pct >= 80 else '👍 Good effort!' if pct >= 50 else '📖 Keep studying!'}
+                    &nbsp;·&nbsp; <i>Learner profile & BKT knowledge states updated!</i>
                 </div>
             </div>
             """, unsafe_allow_html=True)
 
-            if st.button("🔄 Retake Quiz"):
-                st.session_state["quiz_submitted"] = False
-                st.session_state["quiz_answers"] = {}
-                st.rerun()
+            col_retake, col_dash = st.columns(2)
+            with col_retake:
+                if st.button("🔄 Retake Quiz", use_container_width=True):
+                    st.session_state["quiz_submitted"] = False
+                    st.session_state["quiz_answers"] = {}
+                    st.session_state["quiz_confidences"] = {}
+                    st.rerun()
+            with col_dash:
+                if st.button("🎯 Open Adaptive Learning Hub", type="primary", use_container_width=True):
+                    st.session_state["selected_tab"] = "adaptive"
+                    st.rerun()
     else:
         st.markdown("""
         <div class="empty-state">
@@ -1014,6 +1132,219 @@ def render_quiz(active_doc_id):
             <div class="empty-state-desc">Configure difficulty and scope above, then click "Build Quiz".</div>
         </div>
         """, unsafe_allow_html=True)
+
+
+def render_adaptive_learning(active_doc_id):
+    st.markdown("""
+    <div class="glass-card" style="margin-bottom:20px;">
+        <div style="font-size:1.25rem; font-weight:800; color:var(--text-primary);">
+            🎯 Adaptive Learning Engine & Knowledge Tracer
+        </div>
+        <div style="font-size:0.86rem; color:var(--text-muted); margin-top:4px;">
+            Powered by Bayesian Knowledge Tracing (BKT), multi-difficulty mastery weighting, spaced repetition (SM-2), and cognitive error-pattern diagnostics.
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    try:
+        res = requests.get(f"{BACKEND_URL}/learning/profile/{st.session_state['session_id']}/{active_doc_id}")
+        if res.status_code != 200:
+            st.error("Could not fetch learner profile.")
+            return
+        profile = res.json()
+    except Exception as e:
+        st.error(f"Cannot connect to backend: {e}")
+        return
+
+    # Check if learner has attempts
+    total_q = profile.get("total_questions_attempted", 0)
+    if total_q == 0:
+        st.markdown("""
+        <div class="empty-state">
+            <div class="empty-state-icon">📊</div>
+            <div class="empty-state-title">No Knowledge Data Yet</div>
+            <div class="empty-state-desc" style="max-width: 540px; margin: 0 auto 20px;">
+                Complete a quiz or answer questions to calibrate your knowledge profile. DocuMind will model your topic mastery, track knowledge via BKT, detect blind spots (like Student A vs Student B patterns), and schedule spaced revisions.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button("🚀 Start a Diagnostic Quiz", type="primary", use_container_width=True):
+            st.session_state["selected_tab"] = "quiz"
+            st.rerun()
+        return
+
+    # 1. Top Metrics Bar
+    m1, m2, m3, m4 = st.columns(4)
+    with m1:
+        st.markdown(f"""
+        <div class="stat-card">
+            <div class="stat-value">{profile.get('overall_mastery', 0):.0f}%</div>
+            <div class="stat-label">Weighted Mastery</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with m2:
+        bkt_val = profile.get('overall_bkt', 0.2)
+        st.markdown(f"""
+        <div class="stat-card">
+            <div class="stat-value">{bkt_val * 100:.0f}%</div>
+            <div class="stat-label">BKT Knowledge State P(L)</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with m3:
+        st.markdown(f"""
+        <div class="stat-card">
+            <div class="stat-value">{profile.get('overall_accuracy', 0):.0f}%</div>
+            <div class="stat-label">Accuracy ({total_q} questions)</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with m4:
+        due_count = len(profile.get("due_reviews", []))
+        st.markdown(f"""
+        <div class="stat-card">
+            <div class="stat-value" style="color: {'#FBBF24' if due_count > 0 else '#34D399'};">{due_count}</div>
+            <div class="stat-label">Spaced Reviews Due</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    # 2. Next Best Learning Action (Recommendation with Transparent Explanation)
+    rec = profile.get("primary_recommendation")
+    if rec:
+        st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
+        urgency_color = "#F87171" if rec.get("urgency") in ("critical_review", "foundation_repair") else "#818CF8"
+        st.markdown(f"""
+        <div class="rec-box animate-in">
+            <div style="font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.12em; color:{urgency_color}; margin-bottom:6px;">
+                ⚡ Recommended Next Action ({rec.get('urgency').replace('_', ' ').title()})
+            </div>
+            <div style="font-size:1.35rem; font-weight:800; color:#fff; margin-bottom:8px;">
+                {rec.get('recommended_activity').replace('_', ' ').title()} on <u>{rec.get('topic')}</u> ({rec.get('recommended_difficulty').upper()} Difficulty)
+            </div>
+            <div style="background: rgba(11, 15, 26, 0.6); padding: 14px 16px; border-radius: 10px; border-left: 3px solid {urgency_color}; margin-bottom: 12px;">
+                <div style="font-size:0.85rem; color:#94A3B8; font-weight:600; margin-bottom:2px;">Pedagogical Reason (The "Why"):</div>
+                <div style="font-size:0.95rem; color:#F1F5F9; line-height:1.5;">{rec.get('reasoning')}</div>
+            </div>
+            <div style="font-size:0.85rem; color:#A855F7;">
+                🎯 <b>Pedagogical Goal:</b> {rec.get('pedagogical_goal')}
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        if st.button(f"🚀 Launch Recommended Action: {rec.get('recommended_activity').replace('_', ' ').title()}", type="primary", use_container_width=True):
+            act = rec.get("recommended_activity")
+            if act in ("quiz_practice", "mastery_challenge"):
+                st.session_state["selected_tab"] = "quiz"
+                st.session_state["qz_diff"] = rec.get("recommended_difficulty", "medium")
+                st.session_state["qz_mode"] = "topic"
+                st.session_state["qz_topic"] = rec.get("topic")
+            elif act == "flashcard_revision":
+                st.session_state["selected_tab"] = "cards"
+                st.session_state["fc_mode"] = "topic"
+                st.session_state["fc_topic"] = rec.get("topic")
+            elif act == "notes_review":
+                st.session_state["selected_tab"] = "notes"
+            st.rerun()
+
+    # 3. Weakness & Cognitive Error Patterns Section
+    weaknesses = profile.get("weaknesses", [])
+    if weaknesses:
+        st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
+        st.markdown("### 🔍 Cognitive Error Patterns & Diagnostic Alerts")
+        for w in weaknesses:
+            p_type = w.get("pattern_type")
+            title = p_type.replace("_", " ").title()
+            border = "rgba(248, 113, 113, 0.4)" if w.get("severity") == "high" else "rgba(251, 191, 36, 0.4)"
+            st.markdown(f"""
+            <div class="glass-card animate-in" style="border-left: 4px solid {border}; margin-bottom: 12px; padding: 16px 20px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-weight:700; color:var(--text-primary); font-size:1.0rem;">
+                        ⚠️ {title} — <span style="color:var(--accent-light);">{w.get('topic')}</span>
+                    </span>
+                    <span style="font-size:0.75rem; font-weight:700; text-transform:uppercase; color:{'#F87171' if w.get('severity')=='high' else '#FBBF24'};">
+                        {w.get('severity')} priority
+                    </span>
+                </div>
+                <div style="font-size:0.88rem; color:var(--text-secondary); margin: 6px 0;">
+                    {w.get('summary')}
+                </div>
+                <div style="font-size:0.84rem; color:#34D399; font-weight:500;">
+                    💡 <b>Actionable Tip:</b> {w.get('actionable_tip')}
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+    # 4. Detailed Topic Mastery Profiles
+    topics = profile.get("topic_profiles", {})
+    if topics:
+        st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
+        st.markdown("### 📊 Topic-by-Topic Learner Modeling")
+        for t_name, t_data in topics.items():
+            status = t_data.get("learning_status", "developing")
+            badge_class = f"badge-{status}" if status in ("mastered", "struggling", "developing") else "badge-developing"
+            mastery = t_data.get("mastery_score", 0.0)
+            bkt = t_data.get("bkt_p_known", 0.20) * 100.0
+
+            st.markdown(f"""
+            <div class="glass-card animate-in" style="margin-bottom:14px; padding: 18px 22px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <div>
+                        <span style="font-size:1.1rem; font-weight:700; color:var(--text-primary);">{t_name}</span>
+                        <span class="{badge_class}" style="margin-left:10px;">{status}</span>
+                        <span style="margin-left:8px; font-size:0.78rem; color:var(--text-muted);">
+                            Calibration: <b>{t_data.get('calibration_status', 'uncalibrated').replace('_', ' ').title()}</b>
+                        </span>
+                    </div>
+                    <div style="font-size:1.15rem; font-weight:800; color:var(--accent-light);">
+                        {mastery:.0f}% Mastery
+                    </div>
+                </div>
+                <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap: 12px; font-size:0.84rem; color:var(--text-secondary);">
+                    <div>🧠 <b>BKT Probability:</b> {bkt:.1f}%</div>
+                    <div>🟢 <b>Easy:</b> {t_data.get('easy_accuracy', 0):.0f}% ({t_data.get('easy_correct', 0)}/{t_data.get('easy_attempts', 0)})</div>
+                    <div>🟡 <b>Medium:</b> {t_data.get('medium_accuracy', 0):.0f}% ({t_data.get('medium_correct', 0)}/{t_data.get('medium_attempts', 0)})</div>
+                    <div>🔴 <b>Hard:</b> {t_data.get('hard_accuracy', 0):.0f}% ({t_data.get('hard_correct', 0)}/{t_data.get('hard_attempts', 0)})</div>
+                </div>
+                <div style="margin-top:8px; font-size:0.78rem; color:var(--text-muted); display:flex; justify-content:space-between;">
+                    <span>🔥 Streak: <b>{t_data.get('consecutive_correct', 0)}</b> correct</span>
+                    <span>⏳ Next Spaced Review: <b>{t_data.get('next_review', 'N/A')[:10] if t_data.get('next_review') else 'Not scheduled'}</b> (Interval: {t_data.get('interval_days', 1)}d)</span>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+    # 5. Adaptive Learning Path (Prerequisites & Milestone RoadMap)
+    try:
+        path_res = requests.get(f"{BACKEND_URL}/learning/path/{st.session_state['session_id']}/{active_doc_id}")
+        if path_res.status_code == 200:
+            path_data = path_res.json()
+            nodes = path_data.get("nodes", [])
+            if nodes:
+                st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
+                st.markdown("### 🗺️ Adaptive Learning Path & Prerequisites")
+                for node in nodes:
+                    n_status = node.get("status")
+                    icon = "🔒" if n_status == "locked" else ("✅" if n_status == "mastered" else ("⏳" if n_status == "review_due" else "🎯"))
+                    border_color = "var(--border)" if n_status == "locked" else ("var(--success)" if n_status == "mastered" else "var(--accent)")
+                    st.markdown(f"""
+                    <div class="path-node animate-in" style="border-left: 4px solid {border_color};">
+                        <div>
+                            <span style="font-size:1.05rem; font-weight:700; color:var(--text-primary);">
+                                {icon} Step {node.get('order_index')}: {node.get('topic')}
+                            </span>
+                            <div style="font-size:0.82rem; color:var(--text-muted); margin-top:2px;">
+                                {node.get('recommended_next_step')}
+                            </div>
+                        </div>
+                        <div style="text-align:right;">
+                            <span style="font-size:0.95rem; font-weight:700; color:var(--accent-light);">
+                                {node.get('mastery_score', 0):.0f}%
+                            </span>
+                            <div style="font-size:0.75rem; text-transform:uppercase; color:var(--text-muted);">
+                                {n_status.replace('_', ' ')}
+                            </div>
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+    except Exception:
+        pass
 
 
 # ─── Main Area Controller ────────────────────────────────────────────────────
@@ -1027,7 +1358,7 @@ if not st.session_state["active_doc_id"]:
         <div style="font-size: 3.5rem; margin-bottom: 6px;">🧠</div>
         <div class="hero-title">DocuMind Intelligence</div>
         <div class="hero-subtitle" style="max-width: 620px; margin: 0 auto;">
-            Upload any PDF to unlock AI-powered conversational Q&A, comprehensive study notes, topic extraction, flashcards, and quizzes.
+            Upload any PDF to unlock AI-powered conversational Q&A, comprehensive study notes, topic extraction, flashcards, quizzes, and the <b>Adaptive Learning Engine</b>.
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -1077,7 +1408,7 @@ if not st.session_state["active_doc_id"]:
             <div style="color: var(--text-muted); font-size: 1.1rem;">→</div>
             <div style="text-align: center;">
                 <div style="font-size: 0.75rem; font-weight: 700; color: var(--accent-light); letter-spacing: 0.1em; text-transform: uppercase;">Step 3</div>
-                <div style="font-size: 0.90rem; font-weight: 600; color: var(--text-primary); margin-top: 2px;">Chat & Learn</div>
+                <div style="font-size: 0.90rem; font-weight: 600; color: var(--text-primary); margin-top: 2px;">Adaptive Study</div>
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -1107,7 +1438,7 @@ else:
                     📄 {active_doc_name}
                 </div>
                 <div style="font-size:0.84rem; color:var(--text-muted); margin-top:4px;">
-                    🧩 <b>{chunks_count}</b> chunks embedded &nbsp;·&nbsp; 📦 <b>{size_str}</b> &nbsp;·&nbsp; ✅ Ready for AI features
+                    🧩 <b>{chunks_count}</b> chunks embedded &nbsp;·&nbsp; 📦 <b>{size_str}</b> &nbsp;·&nbsp; ✅ Ready for AI & Adaptive Features
                 </div>
             </div>
         </div>
@@ -1122,16 +1453,44 @@ else:
                 What would you like to do?
             </div>
             <div style="color: var(--text-muted); font-size: 0.96rem;">
-                Select any feature below to start exploring and studying this document:
+                Select any feature below to start exploring, assessing, and adaptively mastering this document:
             </div>
         </div>
         """, unsafe_allow_html=True)
 
-        # 5 Action Selection Cards
+        # Row 1: 3 Cards
         col1, col2, col3 = st.columns(3)
         with col1:
             st.markdown("""
             <div class="action-card animate-in">
+                <div class="action-card-icon">🎯</div>
+                <div class="action-card-title">Adaptive Engine</div>
+                <div class="action-card-desc">
+                    Bayesian Knowledge Tracing (BKT), error-pattern diagnostics (Student A vs B), spaced repetition, and personalized learning paths.
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            if st.button("🎯 Open Adaptive Engine", use_container_width=True, type="primary", key="btn_act_adaptive"):
+                st.session_state["selected_tab"] = "adaptive"
+                st.rerun()
+
+        with col2:
+            st.markdown("""
+            <div class="action-card animate-in" style="animation-delay:0.05s;">
+                <div class="action-card-icon">❓</div>
+                <div class="action-card-title">Quiz Assessment</div>
+                <div class="action-card-desc">
+                    Take multiple-choice tests with confidence tracking and instant auto-grading that updates your knowledge profile.
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            if st.button("❓ Take Quiz", use_container_width=True, type="primary", key="btn_act_quiz"):
+                st.session_state["selected_tab"] = "quiz"
+                st.rerun()
+
+        with col3:
+            st.markdown("""
+            <div class="action-card animate-in" style="animation-delay:0.1s;">
                 <div class="action-card-icon">💬</div>
                 <div class="action-card-title">Chat Q&A</div>
                 <div class="action-card-desc">
@@ -1143,9 +1502,13 @@ else:
                 st.session_state["selected_tab"] = "chat"
                 st.rerun()
 
-        with col2:
+        st.markdown("<div style='height: 14px;'></div>", unsafe_allow_html=True)
+
+        # Row 2: 3 Cards
+        col4, col5, col6 = st.columns(3)
+        with col4:
             st.markdown("""
-            <div class="action-card animate-in" style="animation-delay:0.05s;">
+            <div class="action-card animate-in" style="animation-delay:0.15s;">
                 <div class="action-card-icon">📝</div>
                 <div class="action-card-title">Study Notes</div>
                 <div class="action-card-desc">
@@ -1157,9 +1520,23 @@ else:
                 st.session_state["selected_tab"] = "notes"
                 st.rerun()
 
-        with col3:
+        with col5:
             st.markdown("""
-            <div class="action-card animate-in" style="animation-delay:0.1s;">
+            <div class="action-card animate-in" style="animation-delay:0.2s;">
+                <div class="action-card-icon">🃏</div>
+                <div class="action-card-title">Flashcards</div>
+                <div class="action-card-desc">
+                    Reinforce memory retention with question-answer flip cards tailored to the entire document or a topic.
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            if st.button("🃏 Practice Flashcards", use_container_width=True, type="primary", key="btn_act_cards"):
+                st.session_state["selected_tab"] = "cards"
+                st.rerun()
+
+        with col6:
+            st.markdown("""
+            <div class="action-card animate-in" style="animation-delay:0.25s;">
                 <div class="action-card-icon">🗂️</div>
                 <div class="action-card-title">Key Topics</div>
                 <div class="action-card-desc">
@@ -1171,45 +1548,15 @@ else:
                 st.session_state["selected_tab"] = "topics"
                 st.rerun()
 
-        st.markdown("<div style='height: 14px;'></div>", unsafe_allow_html=True)
-
-        col4, col5 = st.columns(2)
-        with col4:
-            st.markdown("""
-            <div class="action-card animate-in" style="animation-delay:0.15s;">
-                <div class="action-card-icon">🃏</div>
-                <div class="action-card-title">Interactive Flashcards</div>
-                <div class="action-card-desc">
-                    Reinforce memory retention with question-answer flip cards tailored to the entire document or a topic.
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-            if st.button("🃏 Practice Flashcards", use_container_width=True, type="primary", key="btn_act_cards"):
-                st.session_state["selected_tab"] = "cards"
-                st.rerun()
-
-        with col5:
-            st.markdown("""
-            <div class="action-card animate-in" style="animation-delay:0.2s;">
-                <div class="action-card-icon">❓</div>
-                <div class="action-card-title">Quiz Assessment</div>
-                <div class="action-card-desc">
-                    Test your understanding with customized multiple-choice tests, instant scoring, and review.
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-            if st.button("❓ Take Quiz", use_container_width=True, type="primary", key="btn_act_quiz"):
-                st.session_state["selected_tab"] = "quiz"
-                st.rerun()
-
     # ── CASE 2B: Specific Feature is Active (User chose a tool) ───────────────
     else:
         action_map = {
+            "adaptive": "🎯 Adaptive Engine",
+            "quiz": "❓ Quiz",
             "chat": "💬 Chat Q&A",
             "notes": "📝 Study Notes",
-            "topics": "🗂️ Topics",
             "cards": "🃏 Flashcards",
-            "quiz": "❓ Quiz",
+            "topics": "🗂️ Topics",
         }
 
         # Top Bar: Document Chip + Back Button + Quick Switch Tabs
@@ -1220,7 +1567,8 @@ else:
                 st.rerun()
 
         with bar_col2:
-            cur_idx = list(action_map.keys()).index(st.session_state["selected_tab"])
+            cur_tab = st.session_state["selected_tab"]
+            cur_idx = list(action_map.keys()).index(cur_tab) if cur_tab in action_map else 0
             picked_action = st.radio(
                 "Feature Navigation",
                 options=list(action_map.values()),
@@ -1238,7 +1586,11 @@ else:
         st.divider()
 
         # Render the selected feature
-        if st.session_state["selected_tab"] == "chat":
+        if st.session_state["selected_tab"] == "adaptive":
+            render_adaptive_learning(active_doc_id)
+        elif st.session_state["selected_tab"] == "quiz":
+            render_quiz(active_doc_id)
+        elif st.session_state["selected_tab"] == "chat":
             render_chat(active_doc_id)
         elif st.session_state["selected_tab"] == "notes":
             render_notes(active_doc_id, active_doc_name)
@@ -1246,5 +1598,3 @@ else:
             render_topics(active_doc_id)
         elif st.session_state["selected_tab"] == "cards":
             render_flashcards(active_doc_id)
-        elif st.session_state["selected_tab"] == "quiz":
-            render_quiz(active_doc_id)

@@ -16,6 +16,9 @@ data/uploads/
 # ChromaDB
 data/chroma_db/
 
+# Learner profiles
+data/learner_profiles/
+
 # Jupyter
 .ipynb_checkpoints/
 
