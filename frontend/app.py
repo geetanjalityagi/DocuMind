@@ -375,11 +375,11 @@ def handle_document_upload(file):
 with st.sidebar:
     # 1. Header with Increased Font Sizes
     st.markdown("""
-    <div style="padding: 10px 4px 18px;">
-        <div style="font-size: 2.2rem; font-weight: 800; color: #FFFFFF; display: flex; align-items: center; gap: 10px; letter-spacing: -0.02em; line-height: 1.2;">
+    <div style="padding: 10px 4px 18px; text-align: center;">
+        <div style="font-size: 2.2rem; font-weight: 800; color: #FFFFFF; display: flex; align-items: center; justify-content: center; gap: 10px; letter-spacing: -0.02em; line-height: 1.2;">
             <span>🧠</span> DocuMind
         </div>
-        <div style="font-size: 1.05rem; color: #A1A1AA; font-weight: 500; margin-top: 6px;">
+        <div style="font-size: 1.05rem; color: #A1A1AA; font-weight: 500; margin-top: 6px; text-align: center;">
             AI Document Intelligence
         </div>
     </div>
@@ -403,7 +403,7 @@ with st.sidebar:
     st.divider()
 
     # 3. Main Navigation Tabs (Buttons with Refined Dark Accent - No Stark White!)
-    st.markdown("<div style='font-size: 0.76rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #71717A; margin-bottom: 10px;'>Workspace Navigation</div>", unsafe_allow_html=True)
+    st.markdown("<div style='font-size: 0.76rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #71717A; margin-bottom: 10px; text-align: center;'>Workspace Navigation</div>", unsafe_allow_html=True)
 
     nav_tabs = [
         ("💬 Chat", "💬 Chat"),
@@ -425,7 +425,7 @@ with st.sidebar:
     # 4. Active Document (Positioned BELOW the workspace navigation)
     if st.session_state["documents"]:
         st.divider()
-        st.markdown("<div style='font-size: 0.76rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #71717A; margin-bottom: 8px;'>Active Document</div>", unsafe_allow_html=True)
+        st.markdown("<div style='font-size: 0.76rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #71717A; margin-bottom: 8px; text-align: center;'>Active Document</div>", unsafe_allow_html=True)
 
         doc_options = list(st.session_state["documents"].keys())
         cur_doc = st.session_state["active_doc_id"]
