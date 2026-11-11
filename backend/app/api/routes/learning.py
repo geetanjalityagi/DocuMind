@@ -95,7 +95,6 @@ async def get_learning_path(session_id: str, document_id: str):
     gating concepts based on prerequisite mastery thresholds.
     """
     try:
-        # Attempt to retrieve topics from the document if available
         available_topics: List[str] = []
         try:
             raw_topics = extract_topics(document_id)

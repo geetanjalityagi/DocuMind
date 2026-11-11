@@ -176,7 +176,7 @@ label {
     font-size: 0.85rem !important;
 }
 
-/* ── Chat Messages (Clean ChatGPT/Claude Dark Style) ───────────────────────── */
+/* ── Chat Messages ───────────────────────────────────────────────────────── */
 [data-testid="stChatMessage"] {
     background: transparent !important;
     border-bottom: 1px solid var(--border-subtle) !important;
@@ -188,18 +188,19 @@ label {
     border-bottom: none !important;
 }
 
-/* ── Fixed Chat Input Bar at Bottom (Restricted to Workspace & Constrained) ── */
-.main .block-container {
-    padding-top: 2rem !important;
-    padding-bottom: 5.5rem !important;
+/* ── Content Width Constraint for ALL Pages (Chat, Quiz, Flashcards, Adaptive Learning, Topics, Notes) ── */
+.main .block-container,
+[data-testid="stMainBlockContainer"] {
     max-width: 950px !important;
+    width: 100% !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding-top: 1.8rem !important;
+    padding-bottom: 5.5rem !important;
+    box-sizing: border-box !important;
 }
 
-[data-testid="stBottom"],
-div:has(> [data-testid="stChatInput"]) {
-    background-color: #000000 !important;
-}
-
+/* ── Chat Question Bar (Aligned and Locked to the Exact Same 950px Width) ── */
 [data-testid="stBottom"] {
     background: #000000 !important;
     border-top: 1px solid #1C1C22 !important;
@@ -210,15 +211,18 @@ div:has(> [data-testid="stChatInput"]) {
 
 [data-testid="stBottom"] > div {
     background: transparent !important;
-    max-width: 800px !important;
-    margin: 0 auto !important;
+    max-width: 950px !important;
     width: 100% !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    box-sizing: border-box !important;
 }
 
 [data-testid="stChatInput"] {
-    max-width: 800px !important;
-    margin: 0 auto !important;
+    max-width: 950px !important;
     width: 100% !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
     background-color: #0E0E12 !important;
     border: 1px solid #27272A !important;
     border-radius: 14px !important;
@@ -590,27 +594,25 @@ def render_chat_page(active_doc_id):
         st.markdown("""
         <div style="text-align: center; padding: 50px 20px 24px;">
             <div style="font-size: 2.6rem; margin-bottom: 8px;">🧠</div>
-            <h2 style="font-size: 1.8rem; font-weight: 700; color: #FFFFFF; margin-bottom: 6px;">
+            <h2 style="font-size: 1.8rem; font-weight: 700; color: #FFFFFF; margin-bottom: 24px;">
                 What would you like to explore?
             </h2>
-            <p style="color: #71717A; font-size: 0.92rem; max-width: 460px; margin: 0 auto 30px;">
-                Ask any question below. Answers are verified directly against relevant document context using retrieval-augmented generation.
-            </p>
         </div>
         """, unsafe_allow_html=True)
 
         if doc_name:
-            p1, p2 = st.columns(2)
-            with p1:
-                if st.button("📌 Summarize the core findings of this document", use_container_width=True, key="prompt_1"):
-                    send_chat_message("Summarize the core findings and main takeaways of this document.", active_doc_id)
-                if st.button("🎯 What are the key concepts and definitions?", use_container_width=True, key="prompt_2"):
-                    send_chat_message("What are the key concepts and definitions explained in this document?", active_doc_id)
-            with p2:
-                if st.button("🔍 Explain the methodology or approach used", use_container_width=True, key="prompt_3"):
-                    send_chat_message("Explain the main methodology or framework described in this document.", active_doc_id)
-                if st.button("❓ What are the most critical takeaways?", use_container_width=True, key="prompt_4"):
-                    send_chat_message("What are the most critical takeaways I should remember?", active_doc_id)
+            with st.container(key="suggested_prompts"):
+                p1, p2 = st.columns(2)
+                with p1:
+                    if st.button("📌 Summarize the core findings of this document", use_container_width=True, key="prompt_1"):
+                        send_chat_message("Summarize the core findings and main takeaways of this document.", active_doc_id)
+                    if st.button("🎯 What are the key concepts and definitions?", use_container_width=True, key="prompt_2"):
+                        send_chat_message("What are the key concepts and definitions explained in this document?", active_doc_id)
+                with p2:
+                    if st.button("🔍 Explain the methodology or approach used", use_container_width=True, key="prompt_3"):
+                        send_chat_message("Explain the main methodology or framework described in this document.", active_doc_id)
+                    if st.button("❓ What are the most critical takeaways?", use_container_width=True, key="prompt_4"):
+                        send_chat_message("What are the most critical takeaways I should remember?", active_doc_id)
 
     # Render Chat History
     for msg in st.session_state["chat_history"]:
