@@ -84,7 +84,6 @@ section[data-testid="stSidebar"] div.stButton > button {
     letter-spacing: 0.01em !important;
     transition: all 0.15s ease !important;
 }
-/* Active Tab: Refined dark charcoal with subtle border & accent line (no glaring white!) */
 section[data-testid="stSidebar"] div.stButton > button[kind="primary"] {
     background: #1C1C22 !important;
     color: #FFFFFF !important;
@@ -98,7 +97,6 @@ section[data-testid="stSidebar"] div.stButton > button[kind="primary"]:hover {
     border-color: #52525E !important;
     color: #FFFFFF !important;
 }
-/* Inactive Tabs: Clean transparent/dark with subtle hover */
 section[data-testid="stSidebar"] div.stButton > button[kind="secondary"] {
     background-color: transparent !important;
     color: #A1A1AA !important;
@@ -117,7 +115,6 @@ section[data-testid="stSidebar"] div[data-testid="column"] div.stButton > button
     justify-content: center !important;
 }
 
-/* ── Buttons (Clean Minimalist Monochrome) ──────────────────────────────── */
 .stButton > button {
     background-color: #18181B !important;
     color: #FFFFFF !important;
@@ -139,7 +136,6 @@ section[data-testid="stSidebar"] div[data-testid="column"] div.stButton > button
     transform: translateY(0px) !important;
 }
 
-/* Primary Button (White on Black) */
 .stButton > button[kind="primary"] {
     background-color: #FFFFFF !important;
     color: #000000 !important;
@@ -152,7 +148,6 @@ section[data-testid="stSidebar"] div[data-testid="column"] div.stButton > button
     color: #000000 !important;
 }
 
-/* ── Input Fields & Selects ──────────────────────────────────────────────── */
 .stTextInput > div > div,
 .stNumberInput > div > div,
 .stSelectbox > div > div,
@@ -176,7 +171,6 @@ label {
     font-size: 0.85rem !important;
 }
 
-/* ── Chat Messages ───────────────────────────────────────────────────────── */
 [data-testid="stChatMessage"] {
     background: transparent !important;
     border-bottom: 1px solid var(--border-subtle) !important;
@@ -188,10 +182,9 @@ label {
     border-bottom: none !important;
 }
 
-/* ── Content Width Constraint for ALL Pages (Chat, Quiz, Flashcards, Adaptive Learning, Topics, Notes) ── */
 .main .block-container,
 [data-testid="stMainBlockContainer"] {
-    max-width: 950px !important;
+    max-width: 1080px !important;
     width: 100% !important;
     margin-left: auto !important;
     margin-right: auto !important;
@@ -200,7 +193,6 @@ label {
     box-sizing: border-box !important;
 }
 
-/* ── Chat Question Bar (Aligned and Locked to the Exact Same 950px Width) ── */
 [data-testid="stBottom"] {
     background: #000000 !important;
     border-top: 1px solid #1C1C22 !important;
@@ -211,7 +203,7 @@ label {
 
 [data-testid="stBottom"] > div {
     background: transparent !important;
-    max-width: 950px !important;
+    max-width: 1080px !important;
     width: 100% !important;
     margin-left: auto !important;
     margin-right: auto !important;
@@ -219,7 +211,7 @@ label {
 }
 
 [data-testid="stChatInput"] {
-    max-width: 950px !important;
+    max-width: 1080px !important;
     width: 100% !important;
     margin-left: auto !important;
     margin-right: auto !important;
@@ -405,12 +397,11 @@ hr {
 """, unsafe_allow_html=True)
 
 
-# ─── Session State Initialization ─────────────────────────────────────────────
 defaults = {
     "session_id": str(uuid.uuid4()),
-    "documents": {},          # {doc_id: {filename, title, chunks_size, file_size, page_count}}
+    "documents": {},          
     "active_doc_id": None,
-    "active_page": "💬 Chat",  # Default page
+    "active_page": "💬 Chat",  
     "chat_history": [],
     "flashcards": [],
     "flashcard_idx": 0,
@@ -427,7 +418,6 @@ for key, val in defaults.items():
         st.session_state[key] = val
 
 
-# ─── Document Upload Helper ───────────────────────────────────────────────────
 def handle_document_upload(file):
     with st.spinner("Processing document…"):
         files = {"file": (file.name, file.getvalue(), "application/pdf")}
@@ -470,9 +460,7 @@ def get_api_error(response):
     return response.text.strip() or f"HTTP {response.status_code}"
 
 
-# ─── SIDEBAR: NAVIGATION & DOCUMENT HUB ───────────────────────────────────────
 with st.sidebar:
-    # 1. Header (Compact & Balanced)
     st.markdown("""
     <div style="padding: 4px 2px 18px; text-align: center;">
         <div style="font-size: 1.7rem; font-weight: 800; color: #FFFFFF; display: flex; align-items: center; justify-content: center; gap: 7px; letter-spacing: -0.02em; line-height: 1.15;">
@@ -484,7 +472,6 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
 
-    # 2. Upload Box (Positioned ABOVE the tabs)
     uploaded_pdf = st.file_uploader(
         "Upload PDF",
         type=["pdf"],
@@ -501,7 +488,6 @@ with st.sidebar:
 
     st.divider()
 
-    # 3. Main Navigation Tabs (Compact & Not Congested)
     st.markdown("<div style='font-size: 0.92rem; font-weight: 700; letter-spacing: 0.01em; color: #D4D4D8; margin: 2px 0 10px; text-align: center;'>Workspace Navigation</div>", unsafe_allow_html=True)
 
     nav_tabs = [
@@ -521,7 +507,6 @@ with st.sidebar:
                 st.session_state["active_page"] = page_key
                 st.rerun()
 
-    # 4. Active Document (Positioned BELOW the workspace navigation)
     if st.session_state["documents"]:
         st.divider()
         st.markdown("<div style='font-size: 0.92rem; font-weight: 700; letter-spacing: 0.01em; color: #D4D4D8; margin: 2px 0 10px; text-align: center;'>Active Document</div>", unsafe_allow_html=True)
@@ -544,7 +529,6 @@ with st.sidebar:
 
     st.divider()
 
-    # 5. Clear Chat & Session Info
     col_s1, col_s2 = st.columns([1, 1])
     with col_s1:
         if st.button("🗑️ Clear Chat", use_container_width=True, key="btn_clear_chat"):
@@ -554,16 +538,10 @@ with st.sidebar:
         st.markdown(f"<div style='font-size: 0.70rem; color: #52525B; padding-top: 4px; text-align: right;'>Session `{st.session_state['session_id'][:6]}`</div>", unsafe_allow_html=True)
 
 
-# ─── FEATURE RENDERERS ────────────────────────────────────────────────────────
-
-# ═════════════════════════════════════════════════════════════════════════════
-# 1. HOME SPACE: CONVERSATIONAL CHAT (With question bar at bottom)
-# ═════════════════════════════════════════════════════════════════════════════
 def render_chat_page(active_doc_id):
     active_meta = st.session_state["documents"].get(active_doc_id) if active_doc_id else None
     doc_name = active_meta["filename"] if active_meta else None
 
-    # Header Bar
     if doc_name:
         st.markdown(f"""
         <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0 16px; border-bottom: 1px solid var(--border-subtle); margin-bottom: 16px;">
@@ -589,7 +567,6 @@ def render_chat_page(active_doc_id):
         </div>
         """, unsafe_allow_html=True)
 
-    # If Chat History is Empty, Show Clean Minimalist Greeting
     if not st.session_state["chat_history"]:
         st.markdown("""
         <div style="text-align: center; padding: 50px 20px 24px;">
@@ -614,12 +591,11 @@ def render_chat_page(active_doc_id):
                     if st.button("❓ What are the most critical takeaways?", use_container_width=True, key="prompt_4"):
                         send_chat_message("What are the most critical takeaways I should remember?", active_doc_id)
 
-    # Render Chat History
     for msg in st.session_state["chat_history"]:
         with st.chat_message(msg["role"]):
             st.markdown(msg["content"])
 
-    # ── Asking Question Bar at the Bottom ────────────────────────────────────
+
     user_prompt = st.chat_input("Ask a question about the document…")
     if user_prompt:
         if not active_doc_id:
@@ -655,9 +631,6 @@ def send_chat_message(prompt: str, active_doc_id: str):
     st.rerun()
 
 
-# ═════════════════════════════════════════════════════════════════════════════
-# 2. ADAPTIVE ENGINE PAGE (BKT, Diagnostics, Spaced Repetition, Path)
-# ═════════════════════════════════════════════════════════════════════════════
 def render_adaptive_page(active_doc_id):
     st.markdown("""
     <div style="padding: 10px 0 16px; border-bottom: 1px solid var(--border-subtle); margin-bottom: 20px;">
@@ -698,7 +671,6 @@ def render_adaptive_page(active_doc_id):
             st.rerun()
         return
 
-    # Metrics Row
     m1, m2, m3, m4 = st.columns(4)
     with m1:
         st.markdown(f"""
@@ -732,7 +704,6 @@ def render_adaptive_page(active_doc_id):
         </div>
         """, unsafe_allow_html=True)
 
-    # Next Best Action (Transparent Pedagogical Recommendation)
     rec = profile.get("primary_recommendation")
     if rec:
         st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
@@ -770,7 +741,6 @@ def render_adaptive_page(active_doc_id):
                 st.session_state["active_page"] = "📝 Study Notes"
             st.rerun()
 
-    # Weakness & Cognitive Patterns Section
     weaknesses = profile.get("weaknesses", [])
     if weaknesses:
         st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
@@ -797,7 +767,6 @@ def render_adaptive_page(active_doc_id):
             </div>
             """, unsafe_allow_html=True)
 
-    # Topic Mastery Breakdown
     topics = profile.get("topic_profiles", {})
     if topics:
         st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
@@ -832,7 +801,6 @@ def render_adaptive_page(active_doc_id):
             </div>
             """, unsafe_allow_html=True)
 
-    # Prerequisite & Adaptive Learning Path Roadmap
     try:
         path_res = requests.get(f"{BACKEND_URL}/learning/path/{st.session_state['session_id']}/{active_doc_id}", timeout=10)
         if path_res.status_code == 200:
@@ -907,9 +875,6 @@ def render_adaptive_page(active_doc_id):
         pass
 
 
-# ═════════════════════════════════════════════════════════════════════════════
-# 3. QUIZ ASSESSMENT PAGE
-# ═════════════════════════════════════════════════════════════════════════════
 def render_quiz_page(active_doc_id):
     st.markdown("""
     <div style="padding: 10px 0 16px; border-bottom: 1px solid var(--border-subtle); margin-bottom: 20px;">
@@ -924,7 +889,6 @@ def render_quiz_page(active_doc_id):
         st.info("Select or upload a PDF document in the sidebar to generate a quiz.")
         return
 
-    # Configuration controls
     if "qz_diff" not in st.session_state:
         st.session_state["qz_diff"] = "medium"
     if "qz_mode" not in st.session_state:
@@ -1005,7 +969,6 @@ def render_quiz_page(active_doc_id):
                     st.session_state["quiz_confidences"] = user_confidences
                     st.session_state["quiz_submitted"] = True
 
-                    # Prepare attempts
                     attempts = []
                     for i, q in enumerate(questions):
                         selected = user_answers.get(i, "")
@@ -1026,7 +989,6 @@ def render_quiz_page(active_doc_id):
                             "correct_answer": correct_option,
                         })
 
-                    # Sync to Adaptive Engine
                     try:
                         requests.post(
                             f"{BACKEND_URL}/learning/submit-quiz",
@@ -1041,7 +1003,6 @@ def render_quiz_page(active_doc_id):
                         pass
                     st.rerun()
         else:
-            # Quiz Results
             user_answers = st.session_state["quiz_answers"]
             user_confidences = st.session_state.get("quiz_confidences", {})
             score = 0
@@ -1107,9 +1068,6 @@ def render_quiz_page(active_doc_id):
                     st.rerun()
 
 
-# ═════════════════════════════════════════════════════════════════════════════
-# 4. FLASHCARDS PAGE
-# ═════════════════════════════════════════════════════════════════════════════
 def render_flashcards_page(active_doc_id):
     st.markdown("""
     <div style="padding: 10px 0 16px; border-bottom: 1px solid var(--border-subtle); margin-bottom: 20px;">
@@ -1196,9 +1154,6 @@ def render_flashcards_page(active_doc_id):
                 st.rerun()
 
 
-# ═════════════════════════════════════════════════════════════════════════════
-# 5. STUDY NOTES PAGE
-# ═════════════════════════════════════════════════════════════════════════════
 def render_notes_page(active_doc_id):
     active_meta = st.session_state["documents"].get(active_doc_id) if active_doc_id else None
     doc_name = active_meta["filename"] if active_meta else "document"
@@ -1244,9 +1199,6 @@ def render_notes_page(active_doc_id):
         )
 
 
-# ═════════════════════════════════════════════════════════════════════════════
-# 6. TOPICS PAGE
-# ═════════════════════════════════════════════════════════════════════════════
 def render_topics_page(active_doc_id):
     st.markdown("""
     <div style="padding: 10px 0 16px; border-bottom: 1px solid var(--border-subtle); margin-bottom: 20px;">
@@ -1288,7 +1240,6 @@ def render_topics_page(active_doc_id):
             """, unsafe_allow_html=True)
 
 
-# ─── MAIN CONTROLLER DISPATCHER ───────────────────────────────────────────────
 active_doc_id = st.session_state["active_doc_id"]
 current_page = st.session_state["active_page"]
 
