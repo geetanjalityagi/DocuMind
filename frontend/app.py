@@ -72,14 +72,15 @@ section[data-testid="stSidebar"] * {
 
 /* ── Sidebar Navigation Tabs ─────────────────────────────────────────────── */
 section[data-testid="stSidebar"] div.stButton > button {
-    font-size: 0.88rem !important;
-    padding: 7px 12px !important;
-    min-height: 36px !important;
+    font-size: 0.83rem !important;
+    padding: 6px 10px !important;
+    min-height: 34px !important;
     text-align: left !important;
     justify-content: flex-start !important;
     border-radius: 8px !important;
     font-weight: 500 !important;
-    margin-bottom: 3px !important;
+    margin-bottom: 6px !important;
+    line-height: 1.25 !important;
     letter-spacing: 0.01em !important;
     transition: all 0.15s ease !important;
 }
@@ -109,8 +110,9 @@ section[data-testid="stSidebar"] div.stButton > button[kind="secondary"]:hover {
     color: #FFFFFF !important;
 }
 section[data-testid="stSidebar"] div[data-testid="column"] div.stButton > button {
-    font-size: 0.82rem !important;
-    padding: 6px 10px !important;
+    font-size: 0.78rem !important;
+    padding: 5px 8px !important;
+    min-height: 32px !important;
     text-align: center !important;
     justify-content: center !important;
 }
@@ -452,12 +454,24 @@ def handle_document_upload(file):
             return False, f"Error: {e}"
 
 
+def get_api_error(response):
+    try:
+        payload = response.json()
+    except ValueError:
+        payload = None
+
+    if isinstance(payload, dict) and payload.get("detail"):
+        return str(payload["detail"])
+
+    return response.text.strip() or f"HTTP {response.status_code}"
+
+
 # ─── SIDEBAR: NAVIGATION & DOCUMENT HUB ───────────────────────────────────────
 with st.sidebar:
     # 1. Header (Compact & Balanced)
     st.markdown("""
-    <div style="padding: 4px 2px 8px; text-align: center;">
-        <div style="font-size: 1.7rem; font-weight: 800; color: #FFFFFF; display: flex; align-items: center; justify-content: center; gap: 7px; letter-spacing: -0.02em; line-height: 1.15; transform: translateX(-10px);">
+    <div style="padding: 4px 2px 18px; text-align: center;">
+        <div style="font-size: 1.7rem; font-weight: 800; color: #FFFFFF; display: flex; align-items: center; justify-content: center; gap: 7px; letter-spacing: -0.02em; line-height: 1.15;">
             <span style="font-size: 1.5rem; line-height: 1;">🧠</span> <span>DocuMind</span>
         </div>
         <div style="font-size: 0.86rem; color: #A1A1AA; font-weight: 500; margin-top: 3px; text-align: center;">
@@ -484,7 +498,7 @@ with st.sidebar:
     st.divider()
 
     # 3. Main Navigation Tabs (Compact & Not Congested)
-    st.markdown("<div style='font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #71717A; margin-bottom: 6px; text-align: center;'>Workspace Navigation</div>", unsafe_allow_html=True)
+    st.markdown("<div style='font-size: 0.92rem; font-weight: 700; letter-spacing: 0.01em; color: #D4D4D8; margin: 2px 0 10px; text-align: center;'>Workspace Navigation</div>", unsafe_allow_html=True)
 
     nav_tabs = [
         ("💬 Chat", "💬 Chat"),
@@ -506,7 +520,7 @@ with st.sidebar:
     # 4. Active Document (Positioned BELOW the workspace navigation)
     if st.session_state["documents"]:
         st.divider()
-        st.markdown("<div style='font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #71717A; margin-bottom: 5px; text-align: center;'>Active Document</div>", unsafe_allow_html=True)
+        st.markdown("<div style='font-size: 0.92rem; font-weight: 700; letter-spacing: 0.01em; color: #D4D4D8; margin: 2px 0 10px; text-align: center;'>Active Document</div>", unsafe_allow_html=True)
 
         doc_options = list(st.session_state["documents"].keys())
         cur_doc = st.session_state["active_doc_id"]
@@ -946,7 +960,7 @@ def render_quiz_page(active_doc_id):
                     st.session_state["quiz_confidences"] = {}
                     st.rerun()
                 else:
-                    st.error("Failed to generate quiz questions.")
+                    st.error(f"Failed to generate quiz questions ({res.status_code}): {get_api_error(res)}")
             except Exception as e:
                 st.error(f"Error: {e}")
 
@@ -1139,7 +1153,7 @@ def render_flashcards_page(active_doc_id):
                     st.session_state["show_card_answer"] = False
                     st.rerun()
                 else:
-                    st.error("Failed to generate flashcards.")
+                    st.error(f"Failed to generate flashcards ({res.status_code}): {get_api_error(res)}")
             except Exception as e:
                 st.error(f"Error: {e}")
 
@@ -1207,7 +1221,7 @@ def render_notes_page(active_doc_id):
                 if res.status_code == 200:
                     st.session_state["notes_content"] = res.json().get("notes", "")
                 else:
-                    st.error("Failed to generate notes.")
+                    st.error(f"Failed to generate notes ({res.status_code}): {get_api_error(res)}")
             except Exception as e:
                 st.error(f"Error: {e}")
 
@@ -1252,7 +1266,7 @@ def render_topics_page(active_doc_id):
                 if res.status_code == 200:
                     st.session_state["topics_list"] = res.json().get("topics", [])
                 else:
-                    st.error("Failed to extract topics.")
+                    st.error(f"Failed to extract topics ({res.status_code}): {get_api_error(res)}")
             except Exception as e:
                 st.error(f"Error: {e}")
 

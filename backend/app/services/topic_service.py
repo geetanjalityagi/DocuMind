@@ -36,7 +36,6 @@ def extract_topics(document_id: str) -> list[dict]:
     """
 
     response = llm.invoke(prompt).content
-    # Strip markdown code fences if the LLM wraps the JSON (e.g. ```json ... ```)
     clean_response = re.sub(r"^```(?:json)?\s*|\s*```$", "", response.strip())
     result = json.loads(clean_response)
 

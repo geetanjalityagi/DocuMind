@@ -13,20 +13,15 @@ from app.services.chunk_service import create_chunks
 
 async def save_document(file: UploadFile):
 
-    # Generate unique document ID
     document_id = str(uuid4())
 
-    # Create PDF path
     file_path = UPLOAD_DIR / f"{document_id}.pdf"
 
-    # Read uploaded file
     content = await file.read()
 
-    # Save PDF
     file_path.write_bytes(content)
 
     try:
-        # Read PDF information
         reader = PdfReader(str(file_path))
 
         page_count = len(reader.pages)
