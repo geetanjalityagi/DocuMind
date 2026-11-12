@@ -185,34 +185,19 @@ label {
     border-bottom: none !important;
 }
 
-/* ── CORE FIX: Lock main section in place — never expand when sidebar closes ── */
-/*  Streamlit sidebar = 21rem wide. By anchoring section.main with the same
-    margin-left, the workspace stays frozen in the exact same position whether
-    the sidebar panel is open or collapsed.                                    */
-section[data-testid="stMain"] {
-    margin-left: 21rem !important;
-    min-width: 0 !important;
-    overflow-x: hidden !important;
-}
-
-/* When sidebar is hidden via its collapse state, keep main section in place */
-[data-testid="stSidebarCollapsedControl"] ~ section[data-testid="stMain"],
-.sidebar-collapsed section[data-testid="stMain"] {
-    margin-left: 21rem !important;
-}
-
-/* ── Block Container: fixed readable width on ALL pages ─────────────────── */
-.main .block-container {
-    padding-top: 2rem !important;
-    padding-bottom: 5.5rem !important;
-    max-width: 820px !important;
+/* ── Content Container (Chat, Quiz, Flashcards, Adaptive Learning, Topics, Study Notes) ── */
+.main .block-container,
+[data-testid="stMainBlockContainer"] {
+    max-width: 1080px !important;
     width: 100% !important;
-    margin-left: 0 !important;
+    margin-left: auto !important;
     margin-right: auto !important;
+    padding-top: 1.8rem !important;
+    padding-bottom: 6rem !important;
     box-sizing: border-box !important;
 }
 
-/* ── Chat Input Bar ───────────────────────────────────────────────────────── */
+/* ── Bottom Question Bar ─────────────────────────────────────────────────── */
 [data-testid="stBottom"],
 div:has(> [data-testid="stChatInput"]) {
     background-color: #000000 !important;
@@ -221,22 +206,27 @@ div:has(> [data-testid="stChatInput"]) {
 [data-testid="stBottom"] {
     background: #000000 !important;
     border-top: 1px solid #1C1C22 !important;
-    padding-top: 6px !important;
-    padding-bottom: 8px !important;
+    padding-top: 8px !important;
+    padding-bottom: 12px !important;
     z-index: 90 !important;
 }
 
-[data-testid="stBottom"] > div {
-    background: transparent !important;
-    max-width: 820px !important;
+[data-testid="stBottom"] > div,
+[data-testid="stBottomBlockContainer"] {
+    max-width: 1080px !important;
     width: 100% !important;
-    margin-left: 0 !important;
+    margin-left: auto !important;
     margin-right: auto !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    box-sizing: border-box !important;
 }
 
 [data-testid="stChatInput"] {
-    max-width: 820px !important;
+    max-width: 1080px !important;
     width: 100% !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
     background-color: #0E0E12 !important;
     border: 1px solid #27272A !important;
     border-radius: 14px !important;
@@ -274,12 +264,6 @@ div:has(> [data-testid="stChatInput"]) {
 
 footer {
     display: none !important;
-}
-
-/* ── All pages: constrain all stVerticalBlock children to max 860px ───────── */
-/* This prevents content from stretching full-width when sidebar is collapsed */
-section.main > div:first-child {
-    max-width: 1200px !important;
 }
 
 /* ── Cards & Surfaces ────────────────────────────────────────────────────── */
@@ -577,9 +561,6 @@ def render_chat_page(active_doc_id):
                 <span style="font-size: 1.15rem; font-weight: 600; color: #FFFFFF;">Chat</span>
                 <span style="font-size: 0.82rem; color: var(--text-muted); margin-left: 10px;">📄 {doc_name}</span>
             </div>
-            <div style="font-size: 0.75rem; color: var(--success); font-weight: 500;">
-                ● Ready
-            </div>
         </div>
         """, unsafe_allow_html=True)
     else:
@@ -603,18 +584,19 @@ def render_chat_page(active_doc_id):
         """, unsafe_allow_html=True)
 
         if doc_name:
-            with st.container(key="suggested_prompts"):
-                p1, p2 = st.columns(2)
-                with p1:
-                    if st.button("📌 Summarize the core findings of this document", use_container_width=True, key="prompt_1"):
-                        send_chat_message("Summarize the core findings and main takeaways of this document.", active_doc_id)
-                    if st.button("🎯 What are the key concepts and definitions?", use_container_width=True, key="prompt_2"):
-                        send_chat_message("What are the key concepts and definitions explained in this document?", active_doc_id)
-                with p2:
-                    if st.button("🔍 Explain the methodology or approach used", use_container_width=True, key="prompt_3"):
-                        send_chat_message("Explain the main methodology or framework described in this document.", active_doc_id)
-                    if st.button("❓ What are the most critical takeaways?", use_container_width=True, key="prompt_4"):
-                        send_chat_message("What are the most critical takeaways I should remember?", active_doc_id)
+            p1, p2, p3, p4 = st.columns(4, gap="small")
+            with p1:
+                if st.button("📌 Key findings", use_container_width=True, key="prompt_1"):
+                    send_chat_message("Summarize the core findings and main takeaways of this document.", active_doc_id)
+            with p2:
+                if st.button("🎯 Key concepts", use_container_width=True, key="prompt_2"):
+                    send_chat_message("What are the key concepts and definitions explained in this document?", active_doc_id)
+            with p3:
+                if st.button("🔍 Methodology", use_container_width=True, key="prompt_3"):
+                    send_chat_message("Explain the main methodology or framework described in this document.", active_doc_id)
+            with p4:
+                if st.button("❓ Takeaways", use_container_width=True, key="prompt_4"):
+                    send_chat_message("What are the most critical takeaways I should remember?", active_doc_id)
 
     for msg in st.session_state["chat_history"]:
         with st.chat_message(msg["role"]):
