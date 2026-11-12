@@ -199,21 +199,40 @@ label {
     box-sizing: border-box !important;
 }
 
-/* ── Bottom Question Bar ─────────────────────────────────────────────────── */
+/* ── Bottom Container & Question Bar (Pure Seamless Black Everywhere) ────── */
 [data-testid="stBottom"],
+[data-testid="stBottom"] > div,
+[data-testid="stBottom"] > div > div,
+[data-testid="stBottomBlockContainer"],
+.stChatFloatingInputContainer,
 div:has(> [data-testid="stChatInput"]) {
+    background: #000000 !important;
     background-color: #000000 !important;
+    border: none !important;
+    border-top: none !important;
+    box-shadow: none !important;
+}
+
+[data-testid="stBottom"]::before,
+[data-testid="stBottom"]::after,
+.stChatFloatingInputContainer::before,
+.stChatFloatingInputContainer::after {
+    display: none !important;
+    background: transparent !important;
 }
 
 [data-testid="stBottom"] {
-    background: #000000 !important;
-    border-top: none !important;
-    padding-top: 10px !important;
-    padding-bottom: 22px !important;
+    padding-top: 8px !important;
+    padding-bottom: 16px !important;
     z-index: 90 !important;
 }
 
-[data-testid="stBottom"] > div,
+/* Hide bottom container on all pages without chat input so no separate container appears */
+[data-testid="stBottom"]:not(:has([data-testid="stChatInput"])) {
+    display: none !important;
+}
+
+/* Width alignment for bottom container */
 [data-testid="stBottomBlockContainer"] {
     max-width: 900px !important;
     width: 100% !important;
@@ -221,19 +240,26 @@ div:has(> [data-testid="stChatInput"]) {
     margin-right: auto !important;
     padding-left: 24px !important;
     padding-right: 24px !important;
+    padding-bottom: 0 !important;
     box-sizing: border-box !important;
 }
 
+/* ── Question Bar (Pure Black Card Pill) ─────────────────────────────────── */
 [data-testid="stChatInput"] {
     max-width: 900px !important;
     width: 100% !important;
     margin-left: auto !important;
     margin-right: auto !important;
-    background-color: #0E0E12 !important;
+    background-color: #000000 !important;
     border: 1px solid #27272A !important;
     border-radius: 14px !important;
     box-shadow: 0 4px 24px rgba(0, 0, 0, 0.8) !important;
     transition: all 0.2s ease !important;
+}
+
+[data-testid="stChatInput"] > div {
+    background-color: #000000 !important;
+    border: none !important;
 }
 
 [data-testid="stChatInput"]:focus-within {
@@ -244,6 +270,7 @@ div:has(> [data-testid="stChatInput"]) {
 [data-testid="stChatInput"] textarea {
     color: #FFFFFF !important;
     background: transparent !important;
+    background-color: transparent !important;
     font-size: 0.95rem !important;
     font-family: inherit !important;
     padding: 12px 14px !important;
@@ -255,6 +282,7 @@ div:has(> [data-testid="stChatInput"]) {
 
 [data-testid="stChatInput"] button {
     background: transparent !important;
+    background-color: transparent !important;
     border: none !important;
     color: #A1A1AA !important;
     padding-right: 12px !important;
@@ -440,10 +468,45 @@ hr {
 """, unsafe_allow_html=True)
 
 
+def load_persisted_documents():
+    docs = {}
+    upload_dir = "data/uploads"
+    db_path = "data/chroma_db/chroma.sqlite3"
+    import os, sqlite3
+    if not os.path.exists(upload_dir):
+        return docs
+    file_map = {}
+    if os.path.exists(db_path):
+        try:
+            conn = sqlite3.connect(db_path)
+            c = conn.cursor()
+            c.execute("SELECT em1.string_value, em2.string_value FROM embedding_metadata em1 JOIN embedding_metadata em2 ON em1.id = em2.id WHERE em1.key = 'document_id' AND em2.key = 'file_name'")
+            for doc_id, f_name in c.fetchall():
+                file_map[doc_id] = f_name
+            conn.close()
+        except Exception:
+            pass
+    for fname in os.listdir(upload_dir):
+        if fname.endswith(".pdf"):
+            doc_id = fname[:-4]
+            original_name = file_map.get(doc_id, fname)
+            fpath = os.path.join(upload_dir, fname)
+            docs[doc_id] = {
+                "filename": original_name,
+                "title": original_name,
+                "file_size": os.path.getsize(fpath) if os.path.exists(fpath) else 0,
+                "chunks_size": 0,
+                "page_count": 0,
+            }
+    return docs
+
+persisted_docs = load_persisted_documents()
+default_active_id = list(persisted_docs.keys())[0] if persisted_docs else None
+
 defaults = {
     "session_id": str(uuid.uuid4()),
-    "documents": {},         
-    "active_doc_id": None,
+    "documents": persisted_docs,         
+    "active_doc_id": default_active_id,
     "active_page": "💬 Chat", 
     "chat_history": [],
     "flashcards": [],
@@ -550,10 +613,10 @@ with st.sidebar:
                 st.session_state["active_page"] = page_key
                 st.rerun()
 
-    if st.session_state["documents"]:
-        st.divider()
-        st.markdown("<div style='font-size: 0.92rem; font-weight: 700; letter-spacing: 0.01em; color: #D4D4D8; margin: 2px 0 10px; text-align: center;'>Active Document</div>", unsafe_allow_html=True)
+    st.divider()
+    st.markdown("<div style='font-size: 0.92rem; font-weight: 700; letter-spacing: 0.01em; color: #D4D4D8; margin: 2px 0 10px; text-align: center;'>Active Document</div>", unsafe_allow_html=True)
 
+    if st.session_state["documents"]:
         doc_options = list(st.session_state["documents"].keys())
         cur_doc = st.session_state["active_doc_id"]
         doc_idx = doc_options.index(cur_doc) if cur_doc in doc_options else 0
@@ -569,6 +632,8 @@ with st.sidebar:
         if selected_doc != st.session_state["active_doc_id"]:
             st.session_state["active_doc_id"] = selected_doc
             st.rerun()
+    else:
+        st.markdown("<div style='font-size: 0.8rem; color: #71717A; text-align: center; padding: 6px 0;'>No document active</div>", unsafe_allow_html=True)
 
     st.divider()
 
@@ -585,7 +650,6 @@ def render_chat_page(active_doc_id):
     active_meta = st.session_state["documents"].get(active_doc_id) if active_doc_id else None
     doc_name = active_meta["filename"] if active_meta else None
 
-    # Retrieve any queued prompt from question tabs
     queued_prompt = st.session_state.pop("pending_prompt", None)
 
     if doc_name:
@@ -607,7 +671,6 @@ def render_chat_page(active_doc_id):
         </div>
         """, unsafe_allow_html=True)
 
-    # Show greeting and 2x2 question tabs only when chat history is empty
     if not st.session_state["chat_history"] and not queued_prompt:
         st.markdown("""
         <div style="text-align: center; padding: 40px 20px 20px;">
@@ -618,29 +681,26 @@ def render_chat_page(active_doc_id):
         </div>
         """, unsafe_allow_html=True)
 
-        if doc_name:
-            col_left, col_right = st.columns(2, gap="medium")
-            with col_left:
-                if st.button("📌 Summarize the core findings of this document", use_container_width=True, key="prompt_1"):
-                    st.session_state["pending_prompt"] = "Summarize the core findings and main takeaways of this document."
-                    st.rerun()
-                if st.button("🎯 What are the key concepts and definitions?", use_container_width=True, key="prompt_2"):
-                    st.session_state["pending_prompt"] = "What are the key concepts and definitions explained in this document?"
-                    st.rerun()
-            with col_right:
-                if st.button("🔍 Explain the methodology or approach used", use_container_width=True, key="prompt_3"):
-                    st.session_state["pending_prompt"] = "Explain the main methodology or framework described in this document."
-                    st.rerun()
-                if st.button("❓ What are the most critical takeaways?", use_container_width=True, key="prompt_4"):
-                    st.session_state["pending_prompt"] = "What are the most critical takeaways I should remember?"
-                    st.rerun()
+        col_left, col_right = st.columns(2, gap="medium")
+        with col_left:
+            if st.button("📌 Summarize the core findings of this document", use_container_width=True, key="prompt_1"):
+                st.session_state["pending_prompt"] = "Summarize the core findings and main takeaways of this document."
+                st.rerun()
+            if st.button("🎯 What are the key concepts and definitions?", use_container_width=True, key="prompt_2"):
+                st.session_state["pending_prompt"] = "What are the key concepts and definitions explained in this document?"
+                st.rerun()
+        with col_right:
+            if st.button("🔍 Explain the methodology or approach used", use_container_width=True, key="prompt_3"):
+                st.session_state["pending_prompt"] = "Explain the main methodology or framework described in this document."
+                st.rerun()
+            if st.button("❓ What are the most critical takeaways?", use_container_width=True, key="prompt_4"):
+                st.session_state["pending_prompt"] = "What are the most critical takeaways I should remember?"
+                st.rerun()
 
-    # Render Chat History in the workspace
     for msg in st.session_state["chat_history"]:
         with st.chat_message(msg["role"]):
             st.markdown(msg["content"])
 
-    # If prompt was selected from question tabs, process it directly into the workspace chat stream
     if queued_prompt:
         if not active_doc_id:
             st.warning("Please upload or select a PDF document in the sidebar first.")
@@ -722,7 +782,6 @@ def render_adaptive_page(active_doc_id):
             st.rerun()
         return
 
-    # Metrics Row
     m1, m2, m3, m4 = st.columns(4)
     with m1:
         st.markdown(f"""
