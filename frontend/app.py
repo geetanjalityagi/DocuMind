@@ -1,9 +1,7 @@
 import streamlit as st
 import requests
 import uuid
-import time
 
-# ─── Configuration ────────────────────────────────────────────────────────────
 BACKEND_URL = "http://127.0.0.1:8000"
 
 st.set_page_config(
@@ -13,7 +11,6 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# ─── Pure Minimalist Black Color Palette CSS ─────────────────────────────────
 st.markdown("""
 <style>
 /* ── Google Font ─────────────────────────────────────────────────────────── */
@@ -84,6 +81,7 @@ section[data-testid="stSidebar"] div.stButton > button {
     letter-spacing: 0.01em !important;
     transition: all 0.15s ease !important;
 }
+/* Active Tab: Refined dark charcoal with subtle border & accent line (no glaring white!) */
 section[data-testid="stSidebar"] div.stButton > button[kind="primary"] {
     background: #1C1C22 !important;
     color: #FFFFFF !important;
@@ -97,6 +95,7 @@ section[data-testid="stSidebar"] div.stButton > button[kind="primary"]:hover {
     border-color: #52525E !important;
     color: #FFFFFF !important;
 }
+/* Inactive Tabs: Clean transparent/dark with subtle hover */
 section[data-testid="stSidebar"] div.stButton > button[kind="secondary"] {
     background-color: transparent !important;
     color: #A1A1AA !important;
@@ -115,6 +114,7 @@ section[data-testid="stSidebar"] div[data-testid="column"] div.stButton > button
     justify-content: center !important;
 }
 
+/* ── Buttons (Clean Minimalist Monochrome) ──────────────────────────────── */
 .stButton > button {
     background-color: #18181B !important;
     color: #FFFFFF !important;
@@ -136,6 +136,7 @@ section[data-testid="stSidebar"] div[data-testid="column"] div.stButton > button
     transform: translateY(0px) !important;
 }
 
+/* Primary Button (White on Black) */
 .stButton > button[kind="primary"] {
     background-color: #FFFFFF !important;
     color: #000000 !important;
@@ -148,6 +149,7 @@ section[data-testid="stSidebar"] div[data-testid="column"] div.stButton > button
     color: #000000 !important;
 }
 
+/* ── Input Fields & Selects ──────────────────────────────────────────────── */
 .stTextInput > div > div,
 .stNumberInput > div > div,
 .stSelectbox > div > div,
@@ -171,6 +173,7 @@ label {
     font-size: 0.85rem !important;
 }
 
+/* ── Chat Messages (Clean ChatGPT/Claude Dark Style) ───────────────────────── */
 [data-testid="stChatMessage"] {
     background: transparent !important;
     border-bottom: 1px solid var(--border-subtle) !important;
@@ -182,15 +185,37 @@ label {
     border-bottom: none !important;
 }
 
-.main .block-container,
-[data-testid="stMainBlockContainer"] {
-    max-width: 1080px !important;
-    width: 100% !important;
-    margin-left: auto !important;
-    margin-right: auto !important;
-    padding-top: 1.8rem !important;
+/* ── CORE FIX: Lock main section in place — never expand when sidebar closes ── */
+/*  Streamlit sidebar = 21rem wide. By anchoring section.main with the same
+    margin-left, the workspace stays frozen in the exact same position whether
+    the sidebar panel is open or collapsed.                                    */
+section[data-testid="stMain"] {
+    margin-left: 21rem !important;
+    min-width: 0 !important;
+    overflow-x: hidden !important;
+}
+
+/* When sidebar is hidden via its collapse state, keep main section in place */
+[data-testid="stSidebarCollapsedControl"] ~ section[data-testid="stMain"],
+.sidebar-collapsed section[data-testid="stMain"] {
+    margin-left: 21rem !important;
+}
+
+/* ── Block Container: fixed readable width on ALL pages ─────────────────── */
+.main .block-container {
+    padding-top: 2rem !important;
     padding-bottom: 5.5rem !important;
+    max-width: 820px !important;
+    width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: auto !important;
     box-sizing: border-box !important;
+}
+
+/* ── Chat Input Bar ───────────────────────────────────────────────────────── */
+[data-testid="stBottom"],
+div:has(> [data-testid="stChatInput"]) {
+    background-color: #000000 !important;
 }
 
 [data-testid="stBottom"] {
@@ -203,18 +228,15 @@ label {
 
 [data-testid="stBottom"] > div {
     background: transparent !important;
-    max-width: 1080px !important;
+    max-width: 820px !important;
     width: 100% !important;
-    margin-left: auto !important;
+    margin-left: 0 !important;
     margin-right: auto !important;
-    box-sizing: border-box !important;
 }
 
 [data-testid="stChatInput"] {
-    max-width: 1080px !important;
+    max-width: 820px !important;
     width: 100% !important;
-    margin-left: auto !important;
-    margin-right: auto !important;
     background-color: #0E0E12 !important;
     border: 1px solid #27272A !important;
     border-radius: 14px !important;
@@ -252,6 +274,12 @@ label {
 
 footer {
     display: none !important;
+}
+
+/* ── All pages: constrain all stVerticalBlock children to max 860px ───────── */
+/* This prevents content from stretching full-width when sidebar is collapsed */
+section.main > div:first-child {
+    max-width: 1200px !important;
 }
 
 /* ── Cards & Surfaces ────────────────────────────────────────────────────── */
@@ -399,9 +427,9 @@ hr {
 
 defaults = {
     "session_id": str(uuid.uuid4()),
-    "documents": {},          
+    "documents": {},         
     "active_doc_id": None,
-    "active_page": "💬 Chat",  
+    "active_page": "💬 Chat", 
     "chat_history": [],
     "flashcards": [],
     "flashcard_idx": 0,
@@ -561,9 +589,6 @@ def render_chat_page(active_doc_id):
                 <span style="font-size: 1.15rem; font-weight: 600; color: #FFFFFF;">Chat</span>
                 <span style="font-size: 0.82rem; color: var(--text-muted); margin-left: 10px;">No document active</span>
             </div>
-            <div style="font-size: 0.75rem; color: var(--warning); font-weight: 500;">
-                ▲ Upload a PDF in the sidebar
-            </div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -594,7 +619,6 @@ def render_chat_page(active_doc_id):
     for msg in st.session_state["chat_history"]:
         with st.chat_message(msg["role"]):
             st.markdown(msg["content"])
-
 
     user_prompt = st.chat_input("Ask a question about the document…")
     if user_prompt:
@@ -671,6 +695,7 @@ def render_adaptive_page(active_doc_id):
             st.rerun()
         return
 
+    # Metrics Row
     m1, m2, m3, m4 = st.columns(4)
     with m1:
         st.markdown(f"""
