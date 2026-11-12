@@ -188,10 +188,12 @@ label {
 /* ── Content Container (Chat, Quiz, Flashcards, Adaptive Learning, Topics, Study Notes) ── */
 .main .block-container,
 [data-testid="stMainBlockContainer"] {
-    max-width: 1080px !important;
+    max-width: 900px !important;
     width: 100% !important;
     margin-left: auto !important;
     margin-right: auto !important;
+    padding-left: 24px !important;
+    padding-right: 24px !important;
     padding-top: 1.8rem !important;
     padding-bottom: 6rem !important;
     box-sizing: border-box !important;
@@ -205,32 +207,32 @@ div:has(> [data-testid="stChatInput"]) {
 
 [data-testid="stBottom"] {
     background: #000000 !important;
-    border-top: 1px solid #1C1C22 !important;
-    padding-top: 8px !important;
-    padding-bottom: 12px !important;
+    border-top: none !important;
+    padding-top: 10px !important;
+    padding-bottom: 22px !important;
     z-index: 90 !important;
 }
 
 [data-testid="stBottom"] > div,
 [data-testid="stBottomBlockContainer"] {
-    max-width: 1080px !important;
+    max-width: 900px !important;
     width: 100% !important;
     margin-left: auto !important;
     margin-right: auto !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
+    padding-left: 24px !important;
+    padding-right: 24px !important;
     box-sizing: border-box !important;
 }
 
 [data-testid="stChatInput"] {
-    max-width: 1080px !important;
+    max-width: 900px !important;
     width: 100% !important;
     margin-left: auto !important;
     margin-right: auto !important;
     background-color: #0E0E12 !important;
     border: 1px solid #27272A !important;
     border-radius: 14px !important;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7) !important;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.8) !important;
     transition: all 0.2s ease !important;
 }
 
@@ -260,6 +262,35 @@ div:has(> [data-testid="stChatInput"]) {
 
 [data-testid="stChatInput"] button:hover {
     color: #FFFFFF !important;
+}
+
+/* ── Suggested Question Tabs (2x2 Grid) ─────────────────────────────────── */
+.st-key-prompt_1 button,
+.st-key-prompt_2 button,
+.st-key-prompt_3 button,
+.st-key-prompt_4 button {
+    background-color: #121214 !important;
+    border: 1px solid #222226 !important;
+    border-radius: 10px !important;
+    padding: 14px 16px !important;
+    font-size: 0.86rem !important;
+    font-weight: 500 !important;
+    text-align: left !important;
+    justify-content: flex-start !important;
+    line-height: 1.4 !important;
+    color: #D4D4D8 !important;
+    margin-bottom: 10px !important;
+    min-height: 56px !important;
+    transition: all 0.15s ease !important;
+}
+.st-key-prompt_1 button:hover,
+.st-key-prompt_2 button:hover,
+.st-key-prompt_3 button:hover,
+.st-key-prompt_4 button:hover {
+    background-color: #1C1C22 !important;
+    border-color: #383842 !important;
+    color: #FFFFFF !important;
+    transform: translateY(-1px) !important;
 }
 
 footer {
@@ -554,6 +585,9 @@ def render_chat_page(active_doc_id):
     active_meta = st.session_state["documents"].get(active_doc_id) if active_doc_id else None
     doc_name = active_meta["filename"] if active_meta else None
 
+    # Retrieve any queued prompt from question tabs
+    queued_prompt = st.session_state.pop("pending_prompt", None)
+
     if doc_name:
         st.markdown(f"""
         <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0 16px; border-bottom: 1px solid var(--border-subtle); margin-bottom: 16px;">
@@ -573,9 +607,10 @@ def render_chat_page(active_doc_id):
         </div>
         """, unsafe_allow_html=True)
 
-    if not st.session_state["chat_history"]:
+    # Show greeting and 2x2 question tabs only when chat history is empty
+    if not st.session_state["chat_history"] and not queued_prompt:
         st.markdown("""
-        <div style="text-align: center; padding: 50px 20px 24px;">
+        <div style="text-align: center; padding: 40px 20px 20px;">
             <div style="font-size: 2.6rem; margin-bottom: 8px;">🧠</div>
             <h2 style="font-size: 1.8rem; font-weight: 700; color: #FFFFFF; margin-bottom: 24px;">
                 What would you like to explore?
@@ -584,23 +619,33 @@ def render_chat_page(active_doc_id):
         """, unsafe_allow_html=True)
 
         if doc_name:
-            p1, p2, p3, p4 = st.columns(4, gap="small")
-            with p1:
-                if st.button("📌 Key findings", use_container_width=True, key="prompt_1"):
-                    send_chat_message("Summarize the core findings and main takeaways of this document.", active_doc_id)
-            with p2:
-                if st.button("🎯 Key concepts", use_container_width=True, key="prompt_2"):
-                    send_chat_message("What are the key concepts and definitions explained in this document?", active_doc_id)
-            with p3:
-                if st.button("🔍 Methodology", use_container_width=True, key="prompt_3"):
-                    send_chat_message("Explain the main methodology or framework described in this document.", active_doc_id)
-            with p4:
-                if st.button("❓ Takeaways", use_container_width=True, key="prompt_4"):
-                    send_chat_message("What are the most critical takeaways I should remember?", active_doc_id)
+            col_left, col_right = st.columns(2, gap="medium")
+            with col_left:
+                if st.button("📌 Summarize the core findings of this document", use_container_width=True, key="prompt_1"):
+                    st.session_state["pending_prompt"] = "Summarize the core findings and main takeaways of this document."
+                    st.rerun()
+                if st.button("🎯 What are the key concepts and definitions?", use_container_width=True, key="prompt_2"):
+                    st.session_state["pending_prompt"] = "What are the key concepts and definitions explained in this document?"
+                    st.rerun()
+            with col_right:
+                if st.button("🔍 Explain the methodology or approach used", use_container_width=True, key="prompt_3"):
+                    st.session_state["pending_prompt"] = "Explain the main methodology or framework described in this document."
+                    st.rerun()
+                if st.button("❓ What are the most critical takeaways?", use_container_width=True, key="prompt_4"):
+                    st.session_state["pending_prompt"] = "What are the most critical takeaways I should remember?"
+                    st.rerun()
 
+    # Render Chat History in the workspace
     for msg in st.session_state["chat_history"]:
         with st.chat_message(msg["role"]):
             st.markdown(msg["content"])
+
+    # If prompt was selected from question tabs, process it directly into the workspace chat stream
+    if queued_prompt:
+        if not active_doc_id:
+            st.warning("Please upload or select a PDF document in the sidebar first.")
+        else:
+            send_chat_message(queued_prompt, active_doc_id)
 
     user_prompt = st.chat_input("Ask a question about the document…")
     if user_prompt:
